@@ -20,13 +20,13 @@ body{font-family:Arial;text-align:center;padding:40px}
 <script>
 async function verifier(){
   const params = new URLSearchParams(window.location.search);
-  const id = params.get('id');
+  const id = params.get('id') || params.get('numero');
   const hash = params.get('hash');
   try{
     const res = await fetch('preuves.json');
     const data = await res.json();
-    const cert = data.find(c => c.numero === id);
-    if(cert && cert.hash === hash){
+    const cert = data.find(c => c.numero === id || c.id === id);
+    if(cert && (!hash || cert.hash === hash)){
       document.getElementById('resultat').innerHTML = '<span class="ok">✅ CERTIFICAT VALIDE</span>';
       document.getElementById('details').innerHTML = `<b>Nom :</b> ${cert.nom}<br><b>Formation :</b> ${cert.formation}<br><b>Du :</b> ${cert.date_debut} <b>au :</b> ${cert.date_fin}<br><b>N° :</b> ${cert.numero}`;
     } else {
