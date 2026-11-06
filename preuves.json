@@ -58,5 +58,23 @@
     "date_debut": "09 Décembre 2026",
     "date_fin": "12 Décembre 2026",
     "hash": "11249991a4055e1602870d66c135a29c4d435733fa1722c60d72e88af4e5f562"
+  },
+  {
+    "id": "ELAN-2026-010",
+    "numero": "ELAN-2026-010",
+    "nom": "Niyondiko Jules",
+    "formation": "Audit Financier",
+    "date_debut": "09 Décembre 2026",
+    "date_fin": "12 Décembre 2026",
+    "hash": "ac47cd3490b1a2c830d175650df256596b0109de92a496e9a5c65b2a347af4d7"
+  },
+  {
+    "id": "ELAN-2026-011",
+    "numero": "ELAN-2026-011",
+    "nom": "Kibwa Jean",
+    "formation": "Audit Financier",
+    "date_debut": "09 Décembre 2026",
+    "date_fin": "12 Décembre 2026",
+    "hash": "5b1a82eb5c29cce716fe0a0c04ab4d9f8bbf16611d44804c2ef06b44b9e50300"
   }
 ]
