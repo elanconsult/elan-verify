@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Vérification ELAN CONSULT</title>
+<style>
+body{font-family:Arial;text-align:center;padding:40px}
+.ok{color:green;font-size:24px;font-weight:bold}
+.non{color:red;font-size:24px;font-weight:bold}
+.box{border:3px solid #102044;padding:20px;max-width:600px;margin:auto}
+</style>
+</head>
+<body>
+<div class="box">
+<h1>CABINET ELAN CONSULT</h1>
+<h2>Vérification du certificat</h2>
+<p id="resultat">Vérification en cours...</p>
+<p id="details"></p>
+</div>
+<script>
+async function verifier(){
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  const hash = params.get('hash');
+  try{
+    const res = await fetch('preuves.json');
+    const data = await res.json();
+    const cert = data.find(c => c.numero === id);
+    if(cert && cert.hash === hash){
+      document.getElementById('resultat').innerHTML = '<span class="ok">✅ CERTIFICAT VALIDE</span>';
+      document.getElementById('details').innerHTML = `<b>Nom :</b> ${cert.nom}<br><b>Formation :</b> ${cert.formation}<br><b>Du :</b> ${cert.date_debut} <b>au :</b> ${cert.date_fin}<br><b>N° :</b> ${cert.numero}`;
+    } else {
+      document.getElementById('resultat').innerHTML = '<span class="non">❌ CERTIFICAT NON VALIDE</span>';
+      document.getElementById('details').innerHTML = 'Ce numéro ou ce code ne correspond à aucun certificat.';
+    }
+  } catch(e){
+    document.getElementById('resultat').innerHTML = 'Erreur : preuves.json introuvable';
+  }
+}
+verifier();
+</script>
+</body>
+</html>
