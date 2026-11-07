@@ -1,0 +1,47 @@
+[
+  {
+    "no_id": "Mat-001",
+    "nom": "Niyondiko Jules",
+    "statut": "Est Actif",
+    "fonction": "Chef Comptable",
+    "hash": "D83CE45CCC22",
+    "hash_complet": "d83ce45ccc229074c4b9f92380e993ca96aebe83b13d546b0e44e3c63234584a",
+    "derniere_maj": "07/11/2026 17:59"
+  },
+  {
+    "no_id": "Mat-002",
+    "nom": "kwizerA Herman",
+    "statut": "Est Actif",
+    "fonction": "Directeur Financier",
+    "hash": "185020858DAC",
+    "hash_complet": "185020858dac928faf14e911b5e9ee3e50f6c10c6d0d802ecc196432df4d6467",
+    "derniere_maj": "07/11/2026 17:59"
+  },
+  {
+    "no_id": "Mat-003",
+    "nom": "Bukuru Jean",
+    "statut": "Est Actif",
+    "fonction": "Comptale",
+    "hash": "0BC2369593C9",
+    "hash_complet": "0bc2369593c99e1d453e86921a3fe11ebcd56f3ffb97ae8d9974b3a8d6301b6a",
+    "derniere_maj": "07/11/2026 17:59"
+  },
+  {
+    "no_id": "Mat-004",
+    "nom": "Habiyambere",
+    "statut": "Est Actif",
+    "fonction": "Comptale",
+    "hash": "D3C82C0D3211",
+    "hash_complet": "d3c82c0d3211f5aa9e71a46d1ed992b762e2f072cfd324095f2211711c025617",
+    "derniere_maj": "07/11/2026 17:59"
+  },
+  {
+    "no_id": "mat-5",
+    "nom": "Habiyakare Longin",
+    "statut": "A quitté notre entreprise",
+    "fonction": "DGA",
+    "hash": "71C2A871F596",
+    "hash_complet": "71c2a871f596ec038be13650fc97fcef5337890ee169f7e8d62b2400ab79fbb7",
+    "derniere_maj": "07/11/2026 18:09"
+  }
+]
