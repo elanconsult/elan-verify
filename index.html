@@ -62,8 +62,11 @@ async function chargerFichier(listeNoms){
   }
   throw new Error('introuvable');
 }
+// On nettoie le No ID : on enlève les espaces et on met tout en majuscule pour comparer
+function nettoyer(v){ return String(v||'').trim().toUpperCase(); }
 async function verifier() {
-  const no_id = document.getElementById('no_id').value.trim();
+  const no_id_brut = document.getElementById('no_id').value.trim();
+  const no_id = nettoyer(no_id_brut);
   const hash = document.getElementById('hash').value.trim().toUpperCase();
   const res = document.getElementById('resultat');
   const infos = document.getElementById('infos');
@@ -77,8 +80,20 @@ async function verifier() {
     : ['preuves_json', 'preuves.json'];
   try{
     const liste = await chargerFichier(fichiers);
-    const data = Array.isArray(liste) ? liste : (liste.data || liste.certificats || liste.employes || []);
-    const trouve = data.find(e => (e.no_id === no_id) || (e.id === no_id) || (e.numero === no_id) || (e.ref === no_id));
+    let data = [];
+    if(Array.isArray(liste)) data = liste;
+    else if(Array.isArray(liste.data)) data = liste.data;
+    else if(Array.isArray(liste.certificats)) data = liste.certificats;
+    else if(Array.isArray(liste.employes)) data = liste.employes;
+    else if(typeof liste === 'object') data = Object.values(liste); // si c'est un objet { "mat-1": {...} }
+
+    // Recherche insensible à la casse et aux espaces
+    const trouve = data.find(e => {
+      if(!e || typeof e !== 'object') return false;
+      const vals = [e.no_id, e.id, e.numero, e.ref, e.matricule, e.code_id, e['No ID'], e['NO_ID']];
+      return vals.some(v => nettoyer(v) === no_id);
+    });
+
     res.style.display = 'block';
     if(!trouve){
       res.style.background = '#FCE8E6'; res.style.color = '#A50E0E';
@@ -89,8 +104,8 @@ async function verifier() {
       }
       return;
     }
-    const hashFichier = (trouve.hash || trouve.hash_complet || trouve.code || '').toString().toUpperCase();
-    const hashOk = hashFichier === hash || hashFichier.startsWith(hash) || hashFichier.includes(hash);
+    const hashFichier = (trouve.hash || trouve.hash_complet || trouve.code || '').toString().toUpperCase().trim();
+    const hashOk = hashFichier === hash || hashFichier.startsWith(hash) || hashFichier.includes(hash) || hash.includes(hashFichier);
     if(!hashOk){
       res.style.background = '#FCE8E6'; res.style.color = '#A50E0E';
       if(typeActuel === 'personnel'){
@@ -105,13 +120,11 @@ async function verifier() {
     const entreprise = trouve.entreprise || 'ELAN CONSULT';
     const statut = (trouve.statut || trouve.status || 'Actif').toString();
     infos.style.display = 'block';
-    infos.innerHTML = '<b>Nom :</b> ' + nom + '<br>' + '<b>Détail :</b> ' + fonction + '<br>' + '<b>Entreprise :</b> ' + entreprise + '<br>' + '<b>No ID :</b> ' + no_id;
+    infos.innerHTML = '<b>Nom :</b> ' + nom + '<br>' + '<b>Détail :</b> ' + fonction + '<br>' + '<b>Entreprise :</b> ' + entreprise + '<br>' + '<b>No ID :</b> ' + no_id_brut;
     if(typeActuel === 'personnel'){
-      // PERSONNEL = ON VERIFIE LA PERSONNE, PAS UN DOCUMENT
       if(statut.toLowerCase().includes('actif')){ res.style.background = '#E6F4EA'; res.style.color = '#137333'; res.textContent = '✅ EMPLOYÉ VÉRIFIÉ - ACTIF chez ' + entreprise; }
       else { res.style.background = '#FFF3CD'; res.style.color = '#856404'; res.textContent = '⚠️ A QUITTÉ L\'ENTREPRISE - Ne plus accepter ce badge'; }
     } else {
-      // CERTIFICAT = ON VERIFIE LE DOCUMENT
       if(statut.toLowerCase().includes('annul') || statut.toLowerCase().includes('expir') || statut.toLowerCase().includes('invalide')){ res.style.background = '#FFF3CD'; res.style.color = '#856404'; res.textContent = '⚠️ CERTIFICAT ANNULÉ / EXPIRÉ - ' + statut; }
       else { res.style.background = '#E6F4EA'; res.style.color = '#137333'; res.textContent = '✅ CERTIFICAT VRAI - VALIDE - ' + nom; }
     }
