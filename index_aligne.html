@@ -72,10 +72,8 @@ function verifier() {
   const hash = document.getElementById('hash').value.trim().toUpperCase();
   const res = document.getElementById('resultat');
   const infos = document.getElementById('infos');
-
   infos.style.display = 'none';
   infos.innerHTML = '';
-
   if(!no_id || !hash){
     res.style.display = 'block';
     res.style.background = '#FFF3CD';
@@ -83,10 +81,8 @@ function verifier() {
     res.textContent = 'Remplis No ID + Hash d\'abord';
     return;
   }
-
-  // TES 2 VRAIS NOMS
-  const fichier = typeActuel === 'personnel' ? 'preuves_id.json' : 'Certificat preuves.json';
-
+  // TES VRAIS NOMS COMME SUR TA CAPTURE
+  const fichier = typeActuel === 'personnel' ? 'preuves_id_json' : 'preuves_json';
   fetch(encodeURI(fichier))
     .then(r => {
       if(!r.ok) throw new Error('fichier introuvable');
@@ -94,38 +90,26 @@ function verifier() {
     })
     .then(liste => {
       const data = Array.isArray(liste) ? liste : (liste.data || liste.certificats || liste.employes || []);
-      const trouve = data.find(e => 
-        (e.no_id === no_id) || (e.id === no_id) || (e.numero === no_id) || (e.ref === no_id)
-      );
+      const trouve = data.find(e => (e.no_id === no_id) || (e.id === no_id) || (e.numero === no_id) || (e.ref === no_id));
       res.style.display = 'block';
-
       if(!trouve){
-        res.style.background = '#FCE8E6';
-        res.style.color = '#A50E0E';
+        res.style.background = '#FCE8E6'; res.style.color = '#A50E0E';
         res.textContent = '❌ FAUX DOCUMENT - Non reconnu';
         return;
       }
-
       const hashFichier = (trouve.hash || trouve.hash_complet || trouve.code || '').toString().toUpperCase();
       const hashOk = hashFichier === hash || hashFichier.startsWith(hash) || hashFichier.includes(hash);
       if(!hashOk){
-        res.style.background = '#FCE8E6';
-        res.style.color = '#A50E0E';
+        res.style.background = '#FCE8E6'; res.style.color = '#A50E0E';
         res.textContent = '❌ FAUX DOCUMENT - Hash modifié';
         return;
       }
-
       const nom = trouve.nom || trouve.titulaire || trouve.beneficiaire || '';
       const fonction = trouve.fonction || trouve.titre || trouve.type || '';
       const entreprise = trouve.entreprise || 'ELAN CONSULT';
       const statut = (trouve.statut || trouve.status || 'Actif').toString();
-
       infos.style.display = 'block';
-      infos.innerHTML = '<b>Nom :</b> ' + nom + '<br>' +
-                        '<b>Détail :</b> ' + fonction + '<br>' +
-                        '<b>Entreprise :</b> ' + entreprise + '<br>' +
-                        '<b>No ID :</b> ' + no_id;
-
+      infos.innerHTML = '<b>Nom :</b> ' + nom + '<br>' + '<b>Détail :</b> ' + fonction + '<br>' + '<b>Entreprise :</b> ' + entreprise + '<br>' + '<b>No ID :</b> ' + no_id;
       if(typeActuel === 'personnel'){
         if(statut.toLowerCase().includes('actif')){
           res.style.background = '#E6F4EA'; res.style.color = '#137333';
@@ -146,18 +130,15 @@ function verifier() {
     })
     .catch(() => {
       res.style.display = 'block';
-      res.style.background = '#FCE8E6';
-      res.style.color = '#A50E0E';
+      res.style.background = '#FCE8E6'; res.style.color = '#A50E0E';
       res.textContent = '❌ Erreur : fichier ' + fichier + ' introuvable sur GitHub';
     });
 }
-
 const params = new URLSearchParams(window.location.search);
 if(params.get('id')) document.getElementById('no_id').value = params.get('id');
 if(params.get('hash')) document.getElementById('hash').value = params.get('hash');
 if(params.get('type')) choisir(params.get('type'));
 if(params.get('id') && params.get('hash')) verifier();
 </script>
-
 </body>
 </html>
