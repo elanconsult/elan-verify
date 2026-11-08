@@ -80,10 +80,26 @@ async function verifier() {
     const data = Array.isArray(liste) ? liste : (liste.data || liste.certificats || liste.employes || []);
     const trouve = data.find(e => (e.no_id === no_id) || (e.id === no_id) || (e.numero === no_id) || (e.ref === no_id));
     res.style.display = 'block';
-    if(!trouve){ res.style.background = '#FCE8E6'; res.style.color = '#A50E0E'; res.textContent = '❌ FAUX DOCUMENT - Non reconnu'; return; }
+    if(!trouve){
+      res.style.background = '#FCE8E6'; res.style.color = '#A50E0E';
+      if(typeActuel === 'personnel'){
+        res.textContent = '❌ PERSONNE NON RECONNUE - Pas dans le personnel ELAN CONSULT';
+      } else {
+        res.textContent = '❌ FAUX CERTIFICAT - Non reconnu';
+      }
+      return;
+    }
     const hashFichier = (trouve.hash || trouve.hash_complet || trouve.code || '').toString().toUpperCase();
     const hashOk = hashFichier === hash || hashFichier.startsWith(hash) || hashFichier.includes(hash);
-    if(!hashOk){ res.style.background = '#FCE8E6'; res.style.color = '#A50E0E'; res.textContent = '❌ FAUX DOCUMENT - Hash modifié'; return; }
+    if(!hashOk){
+      res.style.background = '#FCE8E6'; res.style.color = '#A50E0E';
+      if(typeActuel === 'personnel'){
+        res.textContent = '❌ BADGE FALSIFIÉ - Hash modifié';
+      } else {
+        res.textContent = '❌ FAUX CERTIFICAT - Hash modifié';
+      }
+      return;
+    }
     const nom = trouve.nom || trouve.titulaire || trouve.beneficiaire || '';
     const fonction = trouve.fonction || trouve.titre || trouve.type || '';
     const entreprise = trouve.entreprise || 'ELAN CONSULT';
@@ -91,9 +107,11 @@ async function verifier() {
     infos.style.display = 'block';
     infos.innerHTML = '<b>Nom :</b> ' + nom + '<br>' + '<b>Détail :</b> ' + fonction + '<br>' + '<b>Entreprise :</b> ' + entreprise + '<br>' + '<b>No ID :</b> ' + no_id;
     if(typeActuel === 'personnel'){
-      if(statut.toLowerCase().includes('actif')){ res.style.background = '#E6F4EA'; res.style.color = '#137333'; res.textContent = '✅ VRAI DOCUMENT - ACTIF chez ' + entreprise; }
+      // PERSONNEL = ON VERIFIE LA PERSONNE, PAS UN DOCUMENT
+      if(statut.toLowerCase().includes('actif')){ res.style.background = '#E6F4EA'; res.style.color = '#137333'; res.textContent = '✅ EMPLOYÉ VÉRIFIÉ - ACTIF chez ' + entreprise; }
       else { res.style.background = '#FFF3CD'; res.style.color = '#856404'; res.textContent = '⚠️ A QUITTÉ L\'ENTREPRISE - Ne plus accepter ce badge'; }
     } else {
+      // CERTIFICAT = ON VERIFIE LE DOCUMENT
       if(statut.toLowerCase().includes('annul') || statut.toLowerCase().includes('expir') || statut.toLowerCase().includes('invalide')){ res.style.background = '#FFF3CD'; res.style.color = '#856404'; res.textContent = '⚠️ CERTIFICAT ANNULÉ / EXPIRÉ - ' + statut; }
       else { res.style.background = '#E6F4EA'; res.style.color = '#137333'; res.textContent = '✅ CERTIFICAT VRAI - VALIDE - ' + nom; }
     }
