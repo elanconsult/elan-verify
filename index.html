@@ -81,7 +81,7 @@ async function verifier() {
     res.textContent = 'Remplis No ID + Hash d\'abord'; return;
   }
   const fichiers = typeActuel === 'personnel'
-    ? ['preuves_id.json', 'preuves_id_json', 'personnel.json', 'personnels.json']
+    ? ['preuves_id.json', 'preuves_id_json', 'personnel.json', 'personnels.json','preuves_id_employes.json']
     : ['preuves_json', 'preuves.json'];
   try{
     const liste = await chargerFichier(fichiers);
