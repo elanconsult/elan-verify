@@ -23,6 +23,7 @@
   #resultat { display: none; margin-top: 18px; padding: 15px; text-align: center; font-weight: 800; font-size: 15px; border-radius: 10px; line-height: 1.4; }
   .infos { display: none; margin-top: 14px; background: #F8FAFF; border: 1px solid #D9DEE8; border-radius: 10px; padding: 14px; font-size: 14px; line-height: 1.7; text-align: left; }
   .infos b { color: #0052BE; }
+  .hash-complet { display: none; margin-top: 6px; padding: 9px; background: #F8FAFF; border: 1px solid #D9DEE8; border-radius: 8px; color: #1A2233; font-size: 12px; line-height: 1.4; text-align: left; word-break: break-all; }
   .footer { text-align: center; font-size: 12px; color: #8A93A6; margin-top: 18px; padding-bottom: 20px; }
 </style>
 </head>
@@ -42,6 +43,7 @@
     <input type="text" id="no_id" placeholder="Ex : mat-1">
     <label>Hash de vérification</label>
     <input type="text" id="hash" placeholder="Ex : 10C0B9595D71...">
+    <div id="hash-complet" class="hash-complet"></div>
     <button class="btn" onclick="verifier()">VÉRIFIER</button>
     <div id="resultat"></div>
     <div id="infos" class="infos"></div>
@@ -63,6 +65,10 @@ async function chargerFichier(listeNoms){
   throw new Error('introuvable');
 }
 function nettoyer(v){ return String(v||'').trim().toUpperCase(); }
+function nettoyerPersonnel(v){
+  try { v = decodeURIComponent(String(v ?? '')); } catch(e) { v = String(v ?? ''); }
+  return v.trim().toUpperCase().replace(/\s+/g, '');
+}
 async function verifier() {
   const no_id_brut = document.getElementById('no_id').value.trim();
   const no_id = nettoyer(no_id_brut);
@@ -75,7 +81,7 @@ async function verifier() {
     res.textContent = 'Remplis No ID + Hash d\'abord'; return;
   }
   const fichiers = typeActuel === 'personnel'
-    ? ['preuves_id_json', 'preuves_id.json']
+    ? ['preuves_id.json', 'preuves_id_json', 'personnel.json', 'personnels.json']
     : ['preuves_json', 'preuves.json'];
   try{
     const liste = await chargerFichier(fichiers);
@@ -87,8 +93,12 @@ async function verifier() {
     else if(typeof liste === 'object') data = Object.values(liste);
     const trouve = data.find(e => {
       if(!e || typeof e !== 'object') return false;
-      const vals = [e.no_id, e.id, e.numero, e.ref, e.matricule, e.code_id, e['No ID'], e['NO_ID']];
-      return vals.some(v => nettoyer(v) === no_id);
+      const vals = [
+        e.no_id, e.id, e.numero, e.ref, e.matricule, e.matricule_id,
+        e.code_id, e.identifiant, e.identification, e.badge, e.badge_id,
+        e['No ID'], e['NO_ID'], e['No_Id']
+      ];
+      return vals.some(v => nettoyerPersonnel(v) === nettoyerPersonnel(no_id));
     });
     res.style.display = 'block';
     if(!trouve){
@@ -100,8 +110,19 @@ async function verifier() {
       }
       return;
     }
-    const hashFichier = (trouve.hash || trouve.hash_complet || trouve.code || '').toString().toUpperCase().trim();
-    const hashOk = hashFichier === hash || hashFichier.startsWith(hash) || hashFichier.includes(hash) || hash.includes(hashFichier);
+    let hashOk;
+    if(typeActuel === 'personnel'){
+      const hashValeurs = [
+        trouve.hash, trouve.hash_complet, trouve.hash_badge, trouve.badge_hash,
+        trouve.code, trouve.code_verification, trouve.verification_hash,
+        trouve['Hash'], trouve['HASH']
+      ];
+      const hashFichier = hashValeurs.find(v => v !== undefined && v !== null && String(v).trim() !== '');
+      hashOk = !!hashFichier && nettoyerPersonnel(hashFichier) === nettoyerPersonnel(hash);
+    } else {
+      const hashFichier = (trouve.hash || trouve.hash_complet || trouve.code || '').toString().toUpperCase().trim();
+      hashOk = hashFichier === hash || hashFichier.startsWith(hash) || hashFichier.includes(hash) || hash.includes(hashFichier);
+    }
     if(!hashOk){
       res.style.background = '#FCE8E6'; res.style.color = '#A50E0E';
       if(typeActuel === 'personnel'){
@@ -136,9 +157,16 @@ if(typeUrl) choisir(typeUrl);
 
 if(typeUrl === 'personnel'){
   // PERSONNEL : Hash auto depuis le QR, No ID vide, on ne vérifie pas tout seul
-  if(params.get('hash')) document.getElementById('hash').value = params.get('hash');
+  const hashQr = params.get('hash');
+  if(hashQr){
+    document.getElementById('hash').value = hashQr;
+    document.getElementById('hash').readOnly = true;
+    const hashComplet = document.getElementById('hash-complet');
+    hashComplet.textContent = 'Hash complet du QR code : ' + hashQr;
+    hashComplet.style.display = 'block';
+  }
   document.getElementById('no_id').value = ''; // On ignore le id dans le lien, c'est l'utilisateur qui tape
-  if(params.get('hash')) document.getElementById('no_id').focus();
+  if(hashQr) document.getElementById('no_id').focus();
 } else {
   // CERTIFICAT : on garde l'ancien comportement, on ne touche pas
   if(params.get('id')) document.getElementById('no_id').value = params.get('id');
