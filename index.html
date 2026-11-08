@@ -62,7 +62,6 @@ async function chargerFichier(listeNoms){
   }
   throw new Error('introuvable');
 }
-// On nettoie le No ID : on enlève les espaces et on met tout en majuscule pour comparer
 function nettoyer(v){ return String(v||'').trim().toUpperCase(); }
 async function verifier() {
   const no_id_brut = document.getElementById('no_id').value.trim();
@@ -85,15 +84,12 @@ async function verifier() {
     else if(Array.isArray(liste.data)) data = liste.data;
     else if(Array.isArray(liste.certificats)) data = liste.certificats;
     else if(Array.isArray(liste.employes)) data = liste.employes;
-    else if(typeof liste === 'object') data = Object.values(liste); // si c'est un objet { "mat-1": {...} }
-
-    // Recherche insensible à la casse et aux espaces
+    else if(typeof liste === 'object') data = Object.values(liste);
     const trouve = data.find(e => {
       if(!e || typeof e !== 'object') return false;
       const vals = [e.no_id, e.id, e.numero, e.ref, e.matricule, e.code_id, e['No ID'], e['NO_ID']];
       return vals.some(v => nettoyer(v) === no_id);
     });
-
     res.style.display = 'block';
     if(!trouve){
       res.style.background = '#FCE8E6'; res.style.color = '#A50E0E';
@@ -133,11 +129,22 @@ async function verifier() {
     res.textContent = '❌ Erreur : fichier introuvable sur GitHub';
   }
 }
+// ===== CORRECTION PERSONNEL UNIQUEMENT - CERTIFICAT INTACT =====
 const params = new URLSearchParams(window.location.search);
-if(params.get('id')) document.getElementById('no_id').value = params.get('id');
-if(params.get('hash')) document.getElementById('hash').value = params.get('hash');
-if(params.get('type')) choisir(params.get('type'));
-if(params.get('id') && params.get('hash')) verifier();
+const typeUrl = params.get('type');
+if(typeUrl) choisir(typeUrl);
+
+if(typeUrl === 'personnel'){
+  // PERSONNEL : Hash auto depuis le QR, No ID vide, on ne vérifie pas tout seul
+  if(params.get('hash')) document.getElementById('hash').value = params.get('hash');
+  document.getElementById('no_id').value = ''; // On ignore le id dans le lien, c'est l'utilisateur qui tape
+  if(params.get('hash')) document.getElementById('no_id').focus();
+} else {
+  // CERTIFICAT : on garde l'ancien comportement, on ne touche pas
+  if(params.get('id')) document.getElementById('no_id').value = params.get('id');
+  if(params.get('hash')) document.getElementById('hash').value = params.get('hash');
+  if(params.get('id') && params.get('hash')) verifier();
+}
 </script>
 </body>
 </html>
