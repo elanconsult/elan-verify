@@ -114,9 +114,10 @@ async function verifier() {
         trouve.hash, trouve.hash_complet, trouve.hash_badge, trouve.badge_hash,
         trouve.code, trouve.code_verification, trouve.verification_hash,
         trouve['Hash'], trouve['HASH']
-      ];
-      const hashFichier = hashValeurs.find(v => v !== undefined && v !== null && String(v).trim() !== '');
-      hashOk = !!hashFichier && nettoyerPersonnel(hashFichier) === nettoyerPersonnel(hash);
+      ].filter(v => v !== undefined && v !== null && String(v).trim() !== '').map(v => nettoyerPersonnel(v));
+      const hashNettoye = nettoyerPersonnel(hash);
+      // CORRECTION BOSS : accepte COURT ou LONG, dans les 2 sens
+      hashOk = hashValeurs.some(h => h === hashNettoye || h.startsWith(hashNettoye) || hashNettoye.startsWith(h) || h.includes(hashNettoye) || hashNettoye.includes(h));
     } else {
       const hashFichier = (trouve.hash || trouve.hash_complet || trouve.code || '').toString().toUpperCase().trim();
       hashOk = hashFichier === hash || hashFichier.startsWith(hash) || hashFichier.includes(hash) || hash.includes(hashFichier);
@@ -149,8 +150,6 @@ async function verifier() {
   }
 }
 // ===== VERIFICATION PAR QR + SAISIE DU NO ID =====
-// Le QR code transmet le hash. L'utilisateur saisit ensuite le No ID,
-// puis clique sur VÉRIFIER. Aucune vérification automatique ne se lance.
 const params = new URLSearchParams(window.location.search);
 const typeUrl = (params.get('type') || '').toLowerCase();
 if(typeUrl === 'personnel' || typeUrl === 'certificat') choisir(typeUrl);
@@ -162,14 +161,15 @@ if(hashQr){
 }
 
 if(typeUrl === 'personnel'){
-  // Le No ID n'est jamais repris depuis le QR : il est saisi manuellement.
   document.getElementById('no_id').value = '';
   document.getElementById('no_id').focus();
 } else if(typeUrl === 'certificat'){
-  // Pour un certificat, on conserve le remplissage éventuel depuis l'URL.
   if(params.get('id')) document.getElementById('no_id').value = params.get('id');
+} else if(params.get('no_id') || params.get('hash')){
+  // Ancien QR sans type : on garde le hash, No ID à taper à la main comme tu l'as dit Boss
+  document.getElementById('no_id').value = '';
+  document.getElementById('no_id').focus();
 }
-
 </script>
 </body>
 </html>
