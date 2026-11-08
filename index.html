@@ -23,7 +23,6 @@
   #resultat { display: none; margin-top: 18px; padding: 15px; text-align: center; font-weight: 800; font-size: 15px; border-radius: 10px; line-height: 1.4; }
   .infos { display: none; margin-top: 14px; background: #F8FAFF; border: 1px solid #D9DEE8; border-radius: 10px; padding: 14px; font-size: 14px; line-height: 1.7; text-align: left; }
   .infos b { color: #0052BE; }
-  .hash-complet { display: none; margin-top: 6px; padding: 9px; background: #F8FAFF; border: 1px solid #D9DEE8; border-radius: 8px; color: #1A2233; font-size: 12px; line-height: 1.4; text-align: left; word-break: break-all; }
   .footer { text-align: center; font-size: 12px; color: #8A93A6; margin-top: 18px; padding-bottom: 20px; }
 </style>
 </head>
@@ -43,7 +42,6 @@
     <input type="text" id="no_id" placeholder="Ex : mat-1">
     <label>Hash de vérification</label>
     <input type="text" id="hash" placeholder="Ex : 10C0B9595D71...">
-    <div id="hash-complet" class="hash-complet"></div>
     <button class="btn" onclick="verifier()">VÉRIFIER</button>
     <div id="resultat"></div>
     <div id="infos" class="infos"></div>
@@ -161,9 +159,6 @@ if(typeUrl === 'personnel'){
   if(hashQr){
     document.getElementById('hash').value = hashQr;
     document.getElementById('hash').readOnly = true;
-    const hashComplet = document.getElementById('hash-complet');
-    hashComplet.textContent = 'Hash complet du QR code : ' + hashQr;
-    hashComplet.style.display = 'block';
   }
   document.getElementById('no_id').value = ''; // On ignore le id dans le lien, c'est l'utilisateur qui tape
   if(hashQr) document.getElementById('no_id').focus();
