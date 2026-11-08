@@ -148,26 +148,28 @@ async function verifier() {
     res.textContent = '❌ Erreur : fichier introuvable sur GitHub';
   }
 }
-// ===== CORRECTION PERSONNEL UNIQUEMENT - CERTIFICAT INTACT =====
+// ===== VERIFICATION PAR QR + SAISIE DU NO ID =====
+// Le QR code transmet le hash. L'utilisateur saisit ensuite le No ID,
+// puis clique sur VÉRIFIER. Aucune vérification automatique ne se lance.
 const params = new URLSearchParams(window.location.search);
-const typeUrl = params.get('type');
-if(typeUrl) choisir(typeUrl);
+const typeUrl = (params.get('type') || '').toLowerCase();
+if(typeUrl === 'personnel' || typeUrl === 'certificat') choisir(typeUrl);
+
+const hashQr = params.get('hash');
+if(hashQr){
+  document.getElementById('hash').value = hashQr;
+  document.getElementById('hash').readOnly = true;
+}
 
 if(typeUrl === 'personnel'){
-  // PERSONNEL : Hash auto depuis le QR, No ID vide, on ne vérifie pas tout seul
-  const hashQr = params.get('hash');
-  if(hashQr){
-    document.getElementById('hash').value = hashQr;
-    document.getElementById('hash').readOnly = true;
-  }
-  document.getElementById('no_id').value = ''; // On ignore le id dans le lien, c'est l'utilisateur qui tape
-  if(hashQr) document.getElementById('no_id').focus();
-} else {
-  // CERTIFICAT : on garde l'ancien comportement, on ne touche pas
+  // Le No ID n'est jamais repris depuis le QR : il est saisi manuellement.
+  document.getElementById('no_id').value = '';
+  document.getElementById('no_id').focus();
+} else if(typeUrl === 'certificat'){
+  // Pour un certificat, on conserve le remplissage éventuel depuis l'URL.
   if(params.get('id')) document.getElementById('no_id').value = params.get('id');
-  if(params.get('hash')) document.getElementById('hash').value = params.get('hash');
-  if(params.get('id') && params.get('hash')) verifier();
 }
+
 </script>
 </body>
 </html>
