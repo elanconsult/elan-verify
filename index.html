@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Verification</title>
+<title>Verification Membre</title>
 <style>
 body{font-family:Arial,sans-serif;text-align:center;padding:20px;background:#f5f5f5}
 .box{border:2px solid #0052be;border-radius:12px;padding:20px;max-width:420px;margin:auto;background:white;text-align:left}
@@ -12,98 +12,39 @@ input{width:100%;padding:12px;margin:8px 0;box-sizing:border-box;border:1px soli
 button{width:100%;padding:12px;background:#0052be;color:white;border:none;border-radius:8px;font-size:16px;cursor:pointer}
 .ok{color:green;font-weight:bold;text-align:center}
 .bad{color:red;font-weight:bold;text-align:center}
-#res{margin-top:15px}
-#infos p{margin:6px 0}
-#debug{font-size:12px;color:#888;text-align:center;margin-top:10px}
 </style>
 </head>
 <body>
 <div class="box">
-<h2>Verification</h2>
-<p style="text-align:center">Colle ce que le QR affiche, ou remplis les 2 cases</p>
-<label>Contenu QR (si tu l'as) :</label>
-<input id="qr" placeholder="Ex : ELAN-2026-03|C90294...">
+<h2>Verification Membre</h2>
 <label>No ID :</label>
-<input id="no_id" placeholder="Ex : ELAN-2026-03">
+<input id="no_id" placeholder="Ex : ELAN-2026-01">
 <label>Hash :</label>
-<input id="hash" placeholder="Ex : C90294...">
+<input id="hash" placeholder="Hash">
 <button onclick="verif()">Verifier</button>
 <p id="res"></p>
 <div id="infos"></div>
-<p id="debug"></p>
 </div>
 <script>
-function net(s){ return (s||"").toString().trim().toUpperCase().replace(/\s+/g,""); }
+// === COLLE TES MEMBRES ICI, ENTRE LES [ ] ===
+// Copie le contenu de ton ancien Membres.json, sans les [ ] extérieurs, colle ici
+const MEMBRES = [
+  // EXEMPLE, efface-le et mets les tiens :
+  // {"no_id":"ELAN-2026-01","nom":"NOM","organisation":"ELAN","fonction":"Membre","telephone":"...","mail":"...","hash":"A1B2C3D4E5F6","statut":"actif"},
+];
 
-async function charger(f){
-  try{
-    const r = await fetch(f + "?v=" + Date.now());
-    if(!r.ok) return {ok:false, data:[]};
-    const d = await r.json();
-    return {ok:true, data:d};
-  }catch(e){ return {ok:false, data:[]}; }
-}
-
-async function verif(){
+function verif(){
+  const no_id = document.getElementById("no_id").value.trim();
+  const hash = document.getElementById("hash").value.trim();
   const res = document.getElementById("res");
   const infos = document.getElementById("infos");
-  const debug = document.getElementById("debug");
   infos.innerHTML = "";
-  let no_id = document.getElementById("no_id").value.trim();
-  let hash = document.getElementById("hash").value.trim();
-  const qr = document.getElementById("qr").value.trim();
-  // Si tu colles le QR entier : NO_ID|HASH, on le coupe auto
-  if(qr && qr.includes("|")){
-    const parts = qr.split("|");
-    no_id = parts[0].trim();
-    hash = parts[1].trim();
-    document.getElementById("no_id").value = no_id;
-    document.getElementById("hash").value = hash;
-  }
-  if(!no_id || !hash){ res.innerHTML = "<span class='bad'>Entrez No ID + Hash</span>"; return; }
-  res.innerHTML = "Verification...";
-
-  const m = await charger("Membres.json");
-  const c = await charger("Certificats.json");
-  debug.innerHTML = "Membres.json : " + (m.ok ? m.data.length + " lignes chargees" : "NON CHARGE") + " | Certificats.json : " + (c.ok ? c.data.length + " lignes chargees" : "NON CHARGE");
-
-  if(!m.ok && !c.ok){
-    res.innerHTML = "<span class='bad'>❌ ERREUR MON CODE : JSON non charges. Mets Membres.json et Certificats.json a cote de index.html</span>";
-    return;
-  }
-
-  const tous = [...m.data, ...c.data];
-  // CORRIGÉ : comparaison sans majuscule / espace, c'était le bug
-  const trouve = tous.find(x => net(x.no_id) === net(no_id));
-
-  if(!trouve){
-    res.innerHTML = "<span class='bad'>❌ INTROUVABLE - No ID pas dans le fichier</span>";
-    return;
-  }
-  if(net(trouve.hash) !== net(hash) && net(trouve.hash_complet) !== net(hash)){
-    res.innerHTML = "<span class='bad'>❌ HASH INVALIDE - Document falsifie</span>";
-    return;
-  }
-
-  const estCertificat = trouve.type === "certificat" || trouve.formation;
-  if(trouve.statut === "revoque" || trouve.statut === "annule"){
-    if(estCertificat) res.innerHTML = "<span class='bad'>❌ CERTIFICAT ANNULE</span>";
-    else res.innerHTML = "<span class='bad'>❌ N'EST PLUS MEMBRE ACTIF - Revoque</span>";
-  } else {
-    if(estCertificat) res.innerHTML = "<span class='ok'>✅ CERTIFICAT AUTHENTIQUE - Valide</span>";
-    else res.innerHTML = "<span class='ok'>✅ DOCUMENT AUTHENTIQUE - Membre Actif</span>";
-  }
-
-  let html = `<p><b>Nom :</b> ${trouve.nom || ""}</p>`;
-  if(trouve.organisation) html += `<p><b>Organisation :</b> ${trouve.organisation}</p>`;
-  if(trouve.fonction) html += `<p><b>Fonction :</b> ${trouve.fonction}</p>`;
-  if(trouve.telephone) html += `<p><b>Tel :</b> ${trouve.telephone}</p>`;
-  if(trouve.mail) html += `<p><b>Mail :</b> ${trouve.mail}</p>`;
-  if(trouve.formation) html += `<p><b>Formation :</b> ${trouve.formation}</p>`;
-  if(trouve.date) html += `<p><b>Date :</b> ${trouve.date}</p>`;
-  html += `<p><b>No ID :</b> ${trouve.no_id}</p>`;
-  html += `<p><b>Hash :</b> ${trouve.hash}</p>`;
-  infos.innerHTML = html;
+  const trouve = MEMBRES.find(x => x.no_id === no_id);
+  if(!trouve){ res.innerHTML = "<span class='bad'>❌ INTROUVABLE</span>"; return; }
+  if(trouve.hash !== hash){ res.innerHTML = "<span class='bad'>❌ HASH INVALIDE</span>"; return; }
+  if(trouve.statut === "revoque"){ res.innerHTML = "<span class='bad'>❌ N'EST PLUS MEMBRE ACTIF</span>"; }
+  else { res.innerHTML = "<span class='ok'>✅ DOCUMENT AUTHENTIQUE - Membre Actif</span>"; }
+  infos.innerHTML = `<p><b>Nom :</b> ${trouve.nom}</p><p><b>Organisation :</b> ${trouve.organisation}</p><p><b>Fonction :</b> ${trouve.fonction}</p><p><b>No ID :</b> ${trouve.no_id}</p><p><b>Hash :</b> ${trouve.hash}</p>`;
 }
 </script>
 </body>
