@@ -14,7 +14,7 @@ button{padding:12px;width:100%;background:#0052be;color:white;border:none;border
 </head>
 <body>
 <h2>Vérification ELAN</h2>
-<input id="no_id" placeholder="No ID : ELAN-2026-01">
+<input id="no_id" placeholder="No ID">
 <input id="hash" placeholder="Hash">
 <button onclick="verifier()">Vérifier</button>
 <div id="resultat"></div>
@@ -43,7 +43,7 @@ async function verifier(){
   if(!c){ div.innerHTML=`<div class='bad'>CERTIFICAT INTROUVABLE<br><small>${no_id}</small></div>`; return; }
   const vrai=String(c.hash_complet||c.hash||"").trim().toLowerCase();
   if(vrai!==hash){ div.innerHTML=`<div class='bad'>HASH INVALIDE</div>`; return; }
-  div.innerHTML=`<div class='ok'>CERTIFICAT AUTHENTIQUE - ${c.statut||"Valide"}<br><br><b>${c.nom||""}</b><br><br><b>Formation :</b> ${c.formation||c.titre||""}<br><b>No ID :</b> ${c.no_id}<br><b>Du :</b> ${c.date_debut||""} <b>au :</b> ${c.date_fin||""}<br><b>Généré le :</b> ${c.date_generation||""}</div>`;
+  div.innerHTML=`<div class='ok'>CERTIFICAT AUTHENTIQUE - ${c.statut||""}<br><br><b>${c.nom||""}</b><br><br><b>Formation :</b> ${c.formation||c.titre||""}<br><b>No ID :</b> ${c.no_id}<br><b>Du :</b> ${c.date_debut||""} <b>au :</b> ${c.date_fin||""}<br><b>Généré le :</b> ${c.date_generation||""}</div>`;
 }
 window.onload=()=>{
   const p=new URLSearchParams(location.search);
