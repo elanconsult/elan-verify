@@ -1,0 +1,26 @@
+[
+  {
+    "no_id": "M_00001",
+    "nom": "Habiyakare Longin",
+    "telephone": "79568312",
+    "organisation": "BCB",
+    "fonction": "DGA",
+    "mail": "longin@gmail.com",
+    "hash": "F691429EA213",
+    "hash_complet": "f691429ea213aaa6945165df23bbf4f5ccb820f08f9302101ba12bf5438d07c7",
+    "statut": "actif",
+    "type": "membre"
+  },
+  {
+    "no_id": "M_00002",
+    "nom": "Ndayizeye Jean",
+    "telephone": "61789456",
+    "organisation": "KCB",
+    "fonction": "Auditeur",
+    "mail": "jem@gmail.com",
+    "hash": "18C1E943B69F",
+    "hash_complet": "18c1e943b69f9dbf4c01cb49edd1434de241d81b6633e5ed8895746adf7ba847",
+    "statut": "actif",
+    "type": "membre"
+  }
+]
