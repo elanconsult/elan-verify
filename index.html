@@ -1,71 +1,191 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Vérification ELAN</title>
-<style>
-body{font-family:Arial;padding:20px;max-width:520px;margin:auto;text-align:center}
-input{width:100%;padding:12px;margin:8px 0;box-sizing:border-box}
-button{padding:12px;width:100%;background:#0052be;color:white;border:none;border-radius:8px;cursor:pointer}
-.ok{background:#e6ffe6;border:2px solid green;padding:18px;border-radius:12px;margin-top:15px;text-align:left}
-.bad{background:#ffe6e6;border:2px solid red;padding:15px;border-radius:10px;margin-top:15px}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vérification ELAN</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 520px;
+      margin: auto;
+      text-align: center;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 12px;
+      width: 100%;
+      background: #0052be;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .ok, .bad {
+      padding: 16px;
+      border-radius: 10px;
+      margin-top: 15px;
+      text-align: left;
+    }
+
+    .ok {
+      background: #e6ffe6;
+      border: 2px solid green;
+    }
+
+    .bad {
+      background: #ffe6e6;
+      border: 2px solid red;
+    }
+  </style>
 </head>
 <body>
-<h2>Vérification ELAN</h2>
-<input id="no_id" placeholder="No ID">
-<input id="hash" placeholder="Hash">
-<button onclick="verifier()">Vérifier</button>
-<div id="resultat"></div>
-<script>
-function normaliser(data){
-  if(!data) return [];
-  if(Array.isArray(data)) return data;
-  if(data.certificats && Array.isArray(data.certificats)) return data.certificats;
-  if(data.preuves && Array.isArray(data.preuves)) return data.preuves;
-  if(data.no_id || data.id || data.hash) return [data];
-  if(typeof data === "object"){
-    const vals = Object.values(data);
-    if(vals.length && typeof vals[0] === "object") return vals;
-  }
-  return [];
-}
-async function charger(){
-  let liste=[];
-  const fichiers = ["Certificats.json", "certificats.json", "preuves.json", "Preuves.json"];
-  for(const f of fichiers){
-    try{
-      const r=await fetch(f+"?v="+Date.now());
-      if(r.ok){
-        const d=await r.json();
-        liste=liste.concat(normaliser(d));
+  <h2>Vérification ELAN</h2>
+
+  <input id="no_id" placeholder="No ID" autocomplete="off">
+  <input id="hash" placeholder="Hash" autocomplete="off">
+  <button type="button" onclick="verifier()">Vérifier</button>
+
+  <div id="resultat" aria-live="polite"></div>
+
+  <script>
+    function normaliser(data) {
+      if (Array.isArray(data)) return data;
+      if (!data || typeof data !== "object") return [];
+
+      if (Array.isArray(data.preuves)) return data.preuves;
+      if (data.no_id || data.id || data.hash || data.hash_complet) return [data];
+
+      const valeurs = Object.values(data);
+      if (valeurs.length && valeurs.every(v => v && typeof v === "object")) {
+        return valeurs;
       }
-    }catch(e){}
-  }
-  try{
-    const local=JSON.parse(localStorage.getItem("elan_preuves")||"[]");
-    if(Array.isArray(local)) liste=liste.concat(local);
-  }catch(e){}
-  return liste;
-}
-async function verifier(){
-  const no_id=document.getElementById("no_id").value.trim().toUpperCase();
-  const hash=document.getElementById("hash").value.trim().toLowerCase();
-  const div=document.getElementById("resultat");
-  if(!no_id||!hash){ div.innerHTML=""; return; }
-  div.innerHTML="Vérification...";
-  const liste=await charger();
-  const c=liste.find(x=>String(x.no_id||x.id||"").trim().toUpperCase()===no_id);
-  if(!c){ div.innerHTML=`<div class='bad'>CERTIFICAT INTROUVABLE<br><small>${no_id}</small></div>`; return; }
-  const vrai=String(c.hash_complet||c.hash||"").trim().toLowerCase();
-  if(vrai!==hash){ div.innerHTML=`<div class='bad'>HASH INVALIDE</div>`; return; }
-  div.innerHTML=`<div class='ok'>CERTIFICAT AUTHENTIQUE - ${c.statut||""}<br><br><b>${c.nom||""}</b><br><br><b>Formation :</b> ${c.formation||c.titre||""}<br><b>No ID :</b> ${c.no_id}<br><b>Du :</b> ${c.date_debut||""} <b>au :</b> ${c.date_fin||""}<br><b>Généré le :</b> ${c.date_generation||""}</div>`;
-}
-window.onload=()=>{
-  const p=new URLSearchParams(location.search);
-  if(p.get("no_id")&&p.get("hash")){document.getElementById("no_id").value=p.get("no_id");document.getElementById("hash").value=p.get("hash");verifier();}
-};
-</script>
+
+      return [];
+    }
+
+    async function chargerPreuves() {
+      const reponse = await fetch("preuves.json?v=" + Date.now(), {
+        cache: "no-store"
+      });
+
+      if (!reponse.ok) {
+        throw new Error("Impossible de charger preuves.json");
+      }
+
+      return normaliser(await reponse.json());
+    }
+
+    function afficherTexte(element, texte) {
+      element.textContent = texte || "";
+    }
+
+    async function verifier() {
+      const noId = document.getElementById("no_id").value.trim().toUpperCase();
+      const hash = document.getElementById("hash").value.trim().toLowerCase();
+      const resultat = document.getElementById("resultat");
+
+      resultat.replaceChildren();
+
+      if (!noId || !hash) {
+        afficherTexte(resultat, "Veuillez saisir le No ID et le hash.");
+        return;
+      }
+
+      afficherTexte(resultat, "Vérification...");
+
+      try {
+        const preuves = await chargerPreuves();
+        const preuve = preuves.find(item =>
+          String(item.no_id || item.id || "").trim().toUpperCase() === noId
+        );
+
+        if (!preuve) {
+          resultat.innerHTML = "";
+          const erreur = document.createElement("div");
+          erreur.className = "bad";
+          erreur.textContent = `Preuve introuvable : ${noId}`;
+          resultat.appendChild(erreur);
+          return;
+        }
+
+        const hashValide = String(
+          preuve.hash_complet || preuve.hash || ""
+        ).trim().toLowerCase();
+
+        if (hashValide !== hash) {
+          resultat.innerHTML = "";
+          const erreur = document.createElement("div");
+          erreur.className = "bad";
+          erreur.textContent = "Hash invalide.";
+          resultat.appendChild(erreur);
+          return;
+        }
+
+        resultat.innerHTML = "";
+
+        const carte = document.createElement("div");
+        carte.className = "ok";
+
+        const titre = document.createElement("strong");
+        titre.textContent = "PREUVE AUTHENTIQUE";
+        carte.appendChild(titre);
+
+        const details = document.createElement("p");
+        const champs = [
+          ["Statut", preuve.statut],
+          ["Nom", preuve.nom],
+          ["Téléphone", preuve.telephone],
+          ["Organisation", preuve.organisation],
+          ["Fonction", preuve.fonction],
+          ["E-mail", preuve.mail],
+          ["Formation", preuve.formation || preuve.titre],
+          ["No ID", preuve.no_id || preuve.id],
+          ["Du", preuve.date_debut],
+          ["Au", preuve.date_fin],
+          ["Généré le", preuve.date_generation]
+        ];
+
+        for (const [libelle, valeur] of champs) {
+          if (valeur !== undefined && valeur !== null && String(valeur).trim()) {
+            details.appendChild(document.createTextNode(`${libelle} : ${valeur}`));
+            details.appendChild(document.createElement("br"));
+          }
+        }
+
+        carte.appendChild(details);
+        resultat.appendChild(carte);
+      } catch (erreur) {
+        resultat.innerHTML = "";
+        const message = document.createElement("div");
+        message.className = "bad";
+        message.textContent =
+          "Erreur de chargement de preuves.json. Vérifiez que le fichier est publié au même emplacement que cette page.";
+        resultat.appendChild(message);
+        console.error(erreur);
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const parametres = new URLSearchParams(window.location.search);
+      const noId = parametres.get("no_id");
+      const hash = parametres.get("hash");
+
+      if (noId && hash) {
+        document.getElementById("no_id").value = noId;
+        document.getElementById("hash").value = hash;
+        verifier();
+      }
+    });
+  </script>
 </body>
 </html>
