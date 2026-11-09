@@ -14,41 +14,77 @@ button{width:100%;padding:12px;background:#0052be;color:white;border:none;border
 .bad{color:red;font-weight:bold;text-align:center}
 #res{margin-top:15px}
 #infos p{margin:6px 0}
+#debug{font-size:12px;color:#888;text-align:center;margin-top:10px}
 </style>
 </head>
 <body>
 <div class="box">
 <h2>Verification</h2>
-<p style="text-align:center">Scannez le QR, puis entrez ce qu'il affiche</p>
+<p style="text-align:center">Colle ce que le QR affiche, ou remplis les 2 cases</p>
+<label>Contenu QR (si tu l'as) :</label>
+<input id="qr" placeholder="Ex : ELAN-2026-03|C90294...">
 <label>No ID :</label>
-<input id="no_id" placeholder="Ex : ELAN-001">
+<input id="no_id" placeholder="Ex : ELAN-2026-03">
 <label>Hash :</label>
-<input id="hash" placeholder="Ex : A1B2C3D4E5F6">
+<input id="hash" placeholder="Ex : C90294...">
 <button onclick="verif()">Verifier</button>
 <p id="res"></p>
 <div id="infos"></div>
+<p id="debug"></p>
 </div>
 <script>
+function net(s){ return (s||"").toString().trim().toUpperCase().replace(/\s+/g,""); }
+
+async function charger(f){
+  try{
+    const r = await fetch(f + "?v=" + Date.now());
+    if(!r.ok) return {ok:false, data:[]};
+    const d = await r.json();
+    return {ok:true, data:d};
+  }catch(e){ return {ok:false, data:[]}; }
+}
+
 async function verif(){
-  const no_id = document.getElementById("no_id").value.trim();
-  const hash = document.getElementById("hash").value.trim().toUpperCase();
   const res = document.getElementById("res");
   const infos = document.getElementById("infos");
+  const debug = document.getElementById("debug");
   infos.innerHTML = "";
+  let no_id = document.getElementById("no_id").value.trim();
+  let hash = document.getElementById("hash").value.trim();
+  const qr = document.getElementById("qr").value.trim();
+  // Si tu colles le QR entier : NO_ID|HASH, on le coupe auto
+  if(qr && qr.includes("|")){
+    const parts = qr.split("|");
+    no_id = parts[0].trim();
+    hash = parts[1].trim();
+    document.getElementById("no_id").value = no_id;
+    document.getElementById("hash").value = hash;
+  }
   if(!no_id || !hash){ res.innerHTML = "<span class='bad'>Entrez No ID + Hash</span>"; return; }
   res.innerHTML = "Verification...";
-  let trouve = null;
-  for(const f of ["Membres.json","Certificats.json"]){
-    try{
-      const d = await (await fetch(f)).json();
-      const m = d.find(x => x.no_id === no_id);
-      if(m){ trouve = m; break; }
-    }catch(e){}
+
+  const m = await charger("Membres.json");
+  const c = await charger("Certificats.json");
+  debug.innerHTML = "Membres.json : " + (m.ok ? m.data.length + " lignes chargees" : "NON CHARGE") + " | Certificats.json : " + (c.ok ? c.data.length + " lignes chargees" : "NON CHARGE");
+
+  if(!m.ok && !c.ok){
+    res.innerHTML = "<span class='bad'>❌ ERREUR MON CODE : JSON non charges. Mets Membres.json et Certificats.json a cote de index.html</span>";
+    return;
   }
-  if(!trouve){ res.innerHTML = "<span class='bad'>❌ INTROUVABLE - Faux document</span>"; return; }
-  if(trouve.hash !== hash && trouve.hash_complet !== hash && trouve.hash_complet.toUpperCase() !== hash){
-    res.innerHTML = "<span class='bad'>❌ HASH INVALIDE - Document falsifie</span>"; return;
+
+  const tous = [...m.data, ...c.data];
+  // CORRIGÉ : comparaison sans majuscule / espace, c'était le bug
+  const trouve = tous.find(x => net(x.no_id) === net(no_id));
+
+  if(!trouve){
+    res.innerHTML = "<span class='bad'>❌ INTROUVABLE - No ID pas dans le fichier</span>";
+    return;
   }
+  if(net(trouve.hash) !== net(hash) && net(trouve.hash_complet) !== net(hash)){
+    res.innerHTML = "<span class='bad'>❌ HASH INVALIDE - Document falsifie</span>";
+    return;
+  }
+
   const estCertificat = trouve.type === "certificat" || trouve.formation;
   if(trouve.statut === "revoque" || trouve.statut === "annule"){
     if(estCertificat) res.innerHTML = "<span class='bad'>❌ CERTIFICAT ANNULE</span>";
@@ -57,6 +93,7 @@ async function verif(){
     if(estCertificat) res.innerHTML = "<span class='ok'>✅ CERTIFICAT AUTHENTIQUE - Valide</span>";
     else res.innerHTML = "<span class='ok'>✅ DOCUMENT AUTHENTIQUE - Membre Actif</span>";
   }
+
   let html = `<p><b>Nom :</b> ${trouve.nom || ""}</p>`;
   if(trouve.organisation) html += `<p><b>Organisation :</b> ${trouve.organisation}</p>`;
   if(trouve.fonction) html += `<p><b>Fonction :</b> ${trouve.fonction}</p>`;
@@ -68,10 +105,6 @@ async function verif(){
   html += `<p><b>Hash :</b> ${trouve.hash}</p>`;
   infos.innerHTML = html;
 }
-const p = new URLSearchParams(location.search);
-if(p.get("no_id")) document.getElementById("no_id").value = p.get("no_id");
-if(p.get("hash")) document.getElementById("hash").value = p.get("hash");
-if(p.get("no_id") && p.get("hash")) verif();
 </script>
 </body>
 </html>
