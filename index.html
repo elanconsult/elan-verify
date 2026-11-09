@@ -1,102 +1,456 @@
+Désolé, tu as raison : je t’avais seulement donné un lien. Voici le code corrigé à copier :
+
+```html
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Verification ELAN</title>
-<style>
-body{font-family:Arial,sans-serif;text-align:center;padding:20px;background:#f5f5f5}
-.container{display:flex;flex-wrap:wrap;gap:20px;justify-content:center}
-.box{border:2px solid #0052be;border-radius:12px;padding:20px;width:380px;background:white;text-align:left}
-.box.cert{border-color:#009933}
-h2{text-align:center;color:#0052be}.box.cert h2{color:#009933}
-input{width:100%;padding:12px;margin:8px 0;box-sizing:border-box;border:1px solid #ccc;border-radius:8px;font-size:16px}
-button{width:100%;padding:12px;background:#0052be;color:white;border:none;border-radius:8px;font-size:16px;cursor:pointer}
-.box.cert button{background:#009933}
-.ok{color:green;font-weight:bold;text-align:center}.bad{color:red;font-weight:bold;text-align:center}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ELAN CONSULT - Vérification</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #F4F6FA;
+    }
+
+    .header {
+      width: 100%;
+      padding: 22px 12px 18px;
+      color: white;
+      text-align: center;
+      background: #0052BE;
+      border-bottom: 5px solid #FFC107;
+    }
+
+    .header h1 {
+      margin: 0 auto;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      line-height: 1.2;
+    }
+
+    .header h1 .orange {
+      color: #FF6B35;
+    }
+
+    .header .slogan {
+      max-width: 340px;
+      margin: 10px auto 0;
+      font-size: 19px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .header .sous-slogan {
+      margin-top: 6px;
+      color: #FFD966;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 20px auto;
+      padding: 22px 20px;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .container h2 {
+      margin-bottom: 12px;
+      color: #1A2233;
+      font-size: 19px;
+      text-align: center;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 11px;
+      color: #0052BE;
+      background: white;
+      border: 1px solid #0052BE;
+      border-radius: 9px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .tab.actif {
+      color: white;
+      background: #0052BE;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 5px;
+      color: #1A2233;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: left;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #D9DEE8;
+      border-radius: 9px;
+      outline: none;
+      font-size: 15px;
+      text-align: center;
+    }
+
+    input:focus {
+      border-color: #0052BE;
+      box-shadow: 0 0 0 2px rgba(0, 82, 190, 0.15);
+    }
+
+    .btn {
+      width: 100%;
+      margin-top: 18px;
+      padding: 13px;
+      color: white;
+      background: #0052BE;
+      border: none;
+      border-radius: 9px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    #resultat {
+      display: none;
+      margin-top: 18px;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    .infos {
+      display: none;
+      margin-top: 14px;
+      padding: 14px;
+      background: #F8FAFF;
+      border: 1px solid #D9DEE8;
+      border-radius: 10px;
+      font-size: 14px;
+      line-height: 1.7;
+      text-align: left;
+    }
+
+    .infos b {
+      color: #0052BE;
+    }
+
+    .footer {
+      margin-top: 18px;
+      padding-bottom: 20px;
+      color: #8A93A6;
+      font-size: 12px;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-<h1>Verification ELAN</h1>
-<div class="container">
-<div class="box">
-<h2>Verification Membre</h2>
-<input id="no_id_membre" placeholder="M_00001">
-<input id="hash_membre" placeholder="Hash Membre">
-<button id="btnMembre" type="button">Verifier Membre</button>
-<p id="res_membre"></p><div id="infos_membre"></div>
-</div>
-<div class="box cert">
-<h2>Verification Certificat</h2>
-<input id="no_id_cert" placeholder="ELAN-2026-04">
-<input id="hash_cert" placeholder="Hash Certificat">
-<button id="btnCert" type="button">Verifier Certificat</button>
-<p id="res_cert"></p><div id="infos_cert"></div>
-</div>
-</div>
-<script>
-// AUCUNE DONNEE EN DUR ICI - TOUT VIENT DES FICHIERS JSON
-document.getElementById("btnMembre").addEventListener("click", verifMembre);
-document.getElementById("btnCert").addEventListener("click", verifCert);
+  <header class="header">
+    <h1>CABINET<br>ELAN <span class="orange">CONSULT</span></h1>
+    <p class="slogan">Finis l'usage des faux documents.</p>
+    <p class="sous-slogan">Vérifiez vos documents en 5 secondes.</p>
+  </header>
 
-window.addEventListener("load", ()=>{
-  const p = new URLSearchParams(window.location.search);
-  const no_id = (p.get("no_id")||p.get("id")||"").trim();
-  const hash = (p.get("hash")||p.get("h")||"").trim();
-  const type = (p.get("type")||"").toLowerCase();
-  if(!no_id || !hash) return;
-  if(type.includes("cert") || no_id.startsWith("ELAN-")){
-    document.getElementById("no_id_cert").value = no_id;
-    document.getElementById("hash_cert").value = hash;
-    verifCert();
-  } else if(type.includes("mem") || no_id.startsWith("M_")){
-    document.getElementById("no_id_membre").value = no_id;
-    document.getElementById("hash_membre").value = hash;
-    verifMembre();
-  }
-});
+  <main class="container">
+    <h2>Vérification</h2>
 
-async function verifMembre(){
-  const no_id=document.getElementById("no_id_membre").value.trim();
-  const hash=document.getElementById("hash_membre").value.trim().toLowerCase();
-  const res=document.getElementById("res_membre"); const infos=document.getElementById("infos_membre");
-  infos.innerHTML="";
-  if(!no_id||!hash){res.innerHTML="<span class='bad'>Entrez No ID + Hash</span>";return;}
-  res.innerHTML="Verification...";
-  try{
-    const r=await fetch("Membres.json?v="+Date.now());
-    if(!r.ok){res.innerHTML="<span class='bad'>❌ Fichier Membres.json introuvable sur GitHub</span>";return;}
-    const data=await r.json();
-    const t=data.find(x=>String(x.no_id).trim()===no_id);
-    if(!t){res.innerHTML="<span class='bad'>❌ NON MEMBRE</span>";return;}
-    const h1=String(t.hash||"").toLowerCase(); const h2=String(t.hash_complet||"").toLowerCase();
-    if(!(hash===h1||hash===h2||h2.startsWith(hash)||hash.startsWith(h1))){res.innerHTML="<span class='bad'>❌ NON MEMBRE - HASH INVALIDE</span>";return;}
-    if(t.statut==="actif"||!t.statut){res.innerHTML="<span class='ok'>✅ MEMBRE ACTIF</span>";}
-    else{res.innerHTML="<span class='bad'>❌ NON MEMBRE - INACTIF / REVOQUE</span>";}
-    infos.innerHTML=`<p><b>Nom :</b> ${t.nom||""}</p><p><b>Fonction :</b> ${t.fonction||""}</p><p><b>No ID :</b> ${t.no_id}</p>`;
-  }catch(e){res.innerHTML="<span class='bad'>❌ Erreur lecture Membres.json</span>";}
-}
+    <div class="tabs">
+      <button class="tab actif" id="tab-personnel" type="button" onclick="choisir('personnel')">
+        PERSONNEL
+      </button>
+      <button class="tab" id="tab-certificat" type="button" onclick="choisir('certificat')">
+        CERTIFICAT
+      </button>
+    </div>
 
-async function verifCert(){
-  const no_id=document.getElementById("no_id_cert").value.trim();
-  const hash=document.getElementById("hash_cert").value.trim().toLowerCase();
-  const res=document.getElementById("res_cert"); const infos=document.getElementById("infos_cert");
-  infos.innerHTML="";
-  if(!no_id||!hash){res.innerHTML="<span class='bad'>Entrez No ID + Hash</span>";return;}
-  res.innerHTML="Verification...";
-  try{
-    const r=await fetch("Certificats.json?v="+Date.now());
-    if(!r.ok){res.innerHTML="<span class='bad'>❌ Fichier Certificats.json introuvable sur GitHub</span>";return;}
-    const data=await r.json();
-    const t=data.find(x=>String(x.no_id).trim()===no_id);
-    if(!t){res.innerHTML="<span class='bad'>❌ CERTIFICAT INTROUVABLE - Pas dans Certificats.json</span>";return;}
-    const h1=String(t.hash||"").toLowerCase(); const h2=String(t.hash_complet||"").toLowerCase();
-    if(!(hash===h1||hash===h2||h2.startsWith(hash)||hash.startsWith(h1))){res.innerHTML="<span class='bad'>❌ HASH INVALIDE</span>";return;}
-    if(t.statut==="revoque"){res.innerHTML="<span class='bad'>❌ CERTIFICAT REVOQUE</span>";}
-    else{res.innerHTML="<span class='ok'>✅ CERTIFICAT AUTHENTIQUE</span>";}
-    infos.innerHTML=`<p><b>Nom :</b> ${t.nom||""}</p><p><b>Titre :</b> ${t.titre||""}</p><p><b>No ID :</b> ${t.no_id}</p>`;
-  }catch(e){res.innerHTML="<span class='bad'>❌ Erreur lecture Certificats.json</span>";}
-}
-</script>
+    <label for="no_id">No ID</label>
+    <input type="text" id="no_id" placeholder="Ex : mat-1" autocomplete="off">
+
+    <label for="hash">Hash de vérification</label>
+    <input type="text" id="hash" placeholder="Saisissez le hash complet" autocomplete="off">
+
+    <button class="btn" type="button" onclick="verifier()">VÉRIFIER</button>
+
+    <div id="resultat" role="status" aria-live="polite"></div>
+    <div id="infos" class="infos"></div>
+  </main>
+
+  <footer class="footer">ELAN CONSULT © 2026 - Vérification officielle</footer>
+
+  <script>
+    let typeActuel = "personnel";
+
+    function choisir(type) {
+      typeActuel = type;
+
+      document.getElementById("tab-personnel")
+        .classList.toggle("actif", type === "personnel");
+      document.getElementById("tab-certificat")
+        .classList.toggle("actif", type === "certificat");
+
+      document.getElementById("resultat").style.display = "none";
+      document.getElementById("infos").style.display = "none";
+    }
+
+    async function chargerFichier(listeNoms) {
+      for (const nom of listeNoms) {
+        try {
+          const reponse = await fetch(encodeURI(nom));
+
+          if (reponse.ok) {
+            return await reponse.json();
+          }
+        } catch (erreur) {
+          // Essaie le nom de fichier suivant.
+        }
+      }
+
+      throw new Error("Fichier introuvable");
+    }
+
+    function nettoyerPersonnel(valeur) {
+      try {
+        valeur = decodeURIComponent(String(valeur ?? ""));
+      } catch (erreur) {
+        valeur = String(valeur ?? "");
+      }
+
+      return valeur.trim().toUpperCase().replace(/\s+/g, "");
+    }
+
+    function afficherInfos(infos, lignes) {
+      infos.replaceChildren();
+
+      lignes.forEach(([libelle, valeur], index) => {
+        const titre = document.createElement("b");
+        titre.textContent = libelle + " ";
+        infos.appendChild(titre);
+        infos.appendChild(document.createTextNode(String(valeur ?? "")));
+
+        if (index < lignes.length - 1) {
+          infos.appendChild(document.createElement("br"));
+        }
+      });
+
+      infos.style.display = "block";
+    }
+
+    async function verifier() {
+      const noIdBrut = document.getElementById("no_id").value.trim();
+      const noId = nettoyerPersonnel(noIdBrut);
+      const hashSaisi = document.getElementById("hash").value.trim();
+      const resultat = document.getElementById("resultat");
+      const infos = document.getElementById("infos");
+
+      infos.style.display = "none";
+      infos.replaceChildren();
+
+      if (!noId || !hashSaisi) {
+        resultat.style.display = "block";
+        resultat.style.background = "#FFF3CD";
+        resultat.style.color = "#856404";
+        resultat.textContent = "Remplis No ID et Hash d'abord.";
+        return;
+      }
+
+      const fichiers = typeActuel === "personnel"
+        ? [
+            "preuves_id.json",
+            "preuves_id_json",
+            "personnel.json",
+            "personnels.json",
+            "preuves_id_employes.json"
+          ]
+        : ["preuves_json", "preuves.json"];
+
+      try {
+        const liste = await chargerFichier(fichiers);
+        let donnees = [];
+
+        if (Array.isArray(liste)) {
+          donnees = liste;
+        } else if (Array.isArray(liste.data)) {
+          donnees = liste.data;
+        } else if (Array.isArray(liste.certificats)) {
+          donnees = liste.certificats;
+        } else if (Array.isArray(liste.employes)) {
+          donnees = liste.employes;
+        } else if (liste && typeof liste === "object") {
+          donnees = Object.values(liste);
+        }
+
+        const personne = donnees.find((element) => {
+          if (!element || typeof element !== "object") {
+            return false;
+          }
+
+          const identifiants = [
+            element.no_id,
+            element.id,
+            element.numero,
+            element.ref,
+            element.matricule,
+            element.matricule_id,
+            element.code_id,
+            element.identifiant,
+            element.identification,
+            element.badge,
+            element.badge_id,
+            element["No ID"],
+            element["NO_ID"],
+            element["No_Id"]
+          ];
+
+          return identifiants.some(
+            (valeur) => nettoyerPersonnel(valeur) === noId
+          );
+        });
+
+        resultat.style.display = "block";
+
+        if (!personne) {
+          resultat.style.background = "#FCE8E6";
+          resultat.style.color = "#A50E0E";
+          resultat.textContent = typeActuel === "personnel"
+            ? "❌ PERSONNE NON RECONNUE - Pas dans le personnel ELAN CONSULT"
+            : "❌ FAUX CERTIFICAT - Non reconnu";
+          return;
+        }
+
+        let hashValide = false;
+
+        if (typeActuel === "personnel") {
+          const hashes = [
+            personne.hash,
+            personne.hash_complet,
+            personne.hash_badge,
+            personne.badge_hash,
+            personne.code,
+            personne.code_verification,
+            personne.verification_hash,
+            personne["Hash"],
+            personne["HASH"]
+          ]
+            .filter((valeur) => valeur !== undefined && valeur !== null && String(valeur).trim() !== "")
+            .map(nettoyerPersonnel);
+
+          const hashNormalise = nettoyerPersonnel(hashSaisi);
+
+          // Le hash doit être complet et identique après normalisation.
+          hashValide = hashNormalise.length > 0 &&
+            hashes.some((hash) => hash.length > 0 && hash === hashNormalise);
+        } else {
+          const hashFichier = String(
+            personne.hash || personne.hash_complet || personne.code || ""
+          ).trim().toUpperCase();
+
+          hashValide = hashFichier.length > 0 &&
+            hashFichier === hashSaisi.toUpperCase();
+        }
+
+        if (!hashValide) {
+          resultat.style.background = "#FCE8E6";
+          resultat.style.color = "#A50E0E";
+          resultat.textContent = typeActuel === "personnel"
+            ? "❌ BADGE FALSIFIÉ - Hash incorrect"
+            : "❌ FAUX CERTIFICAT - Hash incorrect";
+          return;
+        }
+
+        const nom = personne.nom || personne.titulaire || personne.beneficiaire || "";
+        const fonction = personne.fonction || personne.titre || personne.type || "";
+        const entreprise = personne.entreprise || "ELAN CONSULT";
+        const statut = String(personne.statut || personne.status || "Actif");
+
+        afficherInfos(infos, [
+          ["Nom :", nom],
+          ["Détail :", fonction],
+          ["Entreprise :", entreprise],
+          ["No ID :", noIdBrut]
+        ]);
+
+        if (typeActuel === "personnel") {
+          if (statut.toLowerCase().includes("actif")) {
+            resultat.style.background = "#E6F4EA";
+            resultat.style.color = "#137333";
+            resultat.textContent = "✅ EMPLOYÉ VÉRIFIÉ - ACTIF chez " + entreprise;
+          } else {
+            resultat.style.background = "#FFF3CD";
+            resultat.style.color = "#856404";
+            resultat.textContent = "⚠️ A QUITTÉ L'ENTREPRISE - Ne plus accepter ce badge";
+          }
+        } else if (
+          statut.toLowerCase().includes("annul") ||
+          statut.toLowerCase().includes("expir") ||
+          statut.toLowerCase().includes("invalide")
+        ) {
+          resultat.style.background = "#FFF3CD";
+          resultat.style.color = "#856404";
+          resultat.textContent = "⚠️ CERTIFICAT ANNULÉ / EXPIRÉ - " + statut;
+        } else {
+          resultat.style.background = "#E6F4EA";
+          resultat.style.color = "#137333";
+          resultat.textContent = "✅ CERTIFICAT VRAI - VALIDE - " + nom;
+        }
+      } catch (erreur) {
+        resultat.style.display = "block";
+        resultat.style.background = "#FCE8E6";
+        resultat.style.color = "#A50E0E";
+        resultat.textContent =
+          "❌ Fichier de vérification introuvable ou inaccessible.";
+      }
+    }
+
+    // Paramètres transmis par le QR code.
+    const params = new URLSearchParams(window.location.search);
+    const typeUrl = (params.get("type") || "").toLowerCase();
+
+    if (typeUrl === "personnel" || typeUrl === "certificat") {
+      choisir(typeUrl);
+    }
+
+    const hashQr = params.get("hash");
+
+    if (hashQr) {
+      document.getElementById("hash").value = hashQr;
+      document.getElementById("hash").readOnly = true;
+    }
+
+    if (typeUrl === "personnel") {
+      document.getElementById("no_id").value = "";
+      document.getElementById("no_id").focus();
+    } else if (typeUrl === "certificat") {
+      if (params.get("id")) {
+        document.getElementById("no_id").value = params.get("id");
+      }
+    } else if (params.get("no_id") || params.get("hash")) {
+      document.getElementById("no_id").value = "";
+      document.getElementById("no_id").focus();
+    }
+  </script>
 </body>
 </html>
+```
