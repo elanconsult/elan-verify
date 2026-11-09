@@ -35,54 +35,45 @@ button{width:100%;padding:12px;background:#0052be;color:white;border:none;border
 </div>
 </div>
 <script>
-// === DONNEES DE SECOURS SI LE FICHIER JSON NE CHARGE PAS - LE BOUTON MARCHE QUAND MEME ===
-const MEMBRES_SECOURS = [
+// DONNEES DANS LA PAGE - LE BOUTON NE BLOQUE PLUS MEME SANS FICHIER JSON
+const MEMBRES = [
   {no_id:"M_00001", nom:"Habiyakare Longin", fonction:"DGA", hash:"f691429ea213", hash_complet:"f691429ea213aaa694516", statut:"actif"}
 ];
-const CERTS_SECOURS = [
+const CERTS = [
   {no_id:"ELAN-2026-03", nom:"Habiyakare Longin", titre:"Certificat ELAN", hash:"c90294e56145445bfa19c", hash_complet:"c90294e56145445bfa19c", statut:"actif"}
 ];
 
 document.getElementById("btnMembre").addEventListener("click", verifMembre);
 document.getElementById("btnCert").addEventListener("click", verifCert);
 
-// Sync : tu tapes dans une, l'autre se remplit
-document.getElementById("no_id_membre").addEventListener("input", ()=>{
-  document.getElementById("no_id_cert").value=document.getElementById("no_id_membre").value;
-});
-document.getElementById("hash_membre").addEventListener("input", ()=>{
-  document.getElementById("hash_cert").value=document.getElementById("hash_membre").value;
-});
-document.getElementById("no_id_cert").addEventListener("input", ()=>{
-  document.getElementById("no_id_membre").value=document.getElementById("no_id_cert").value;
-});
-document.getElementById("hash_cert").addEventListener("input", ()=>{
-  document.getElementById("hash_membre").value=document.getElementById("hash_cert").value;
-});
-
-// Auto au scan QR
-window.addEventListener("load", ()=>{
-  const p=new URLSearchParams(window.location.search);
-  const no_id=p.get("no_id")||p.get("id")||"";
-  const hash=p.get("hash")||p.get("h")||"";
-  if(no_id && hash){
-    document.getElementById("no_id_membre").value=no_id;
-    document.getElementById("hash_membre").value=hash;
-    document.getElementById("no_id_cert").value=no_id;
-    document.getElementById("hash_cert").value=hash;
-    if(no_id.startsWith("ELAN-")) verifCert();
-    else if(no_id.startsWith("M_")) verifMembre();
+// AUTO AU SCAN : ON NE REMPLIT QUE LA BONNE FENETRE
+window.addEventListener("load", async ()=>{
+  const p = new URLSearchParams(window.location.search);
+  const no_id = (p.get("no_id")||p.get("id")||"").trim();
+  const hash = (p.get("hash")||p.get("h")||"").trim();
+  const type = (p.get("type")||"").toLowerCase();
+  if(!no_id || !hash) return;
+  if(type.includes("cert") || no_id.startsWith("ELAN-")){
+    document.getElementById("no_id_cert").value = no_id;
+    document.getElementById("hash_cert").value = hash;
+    verifCert();
+  } else if(type.includes("mem") || no_id.startsWith("M_")){
+    document.getElementById("no_id_membre").value = no_id;
+    document.getElementById("hash_membre").value = hash;
+    verifMembre();
   }
 });
 
-async function loadJSON(file, secours){
+async function getData(file, local){
   try{
-    const r=await fetch(file+"?v="+Date.now());
-    if(!r.ok) return secours;
-    const d=await r.json();
-    if(!Array.isArray(d) || d.length===0) return secours;
-    return d;
-  }catch(e){ return secours; }
+    const ctrl = new AbortController();
+    setTimeout(()=>ctrl.abort(), 2000); // si le fichier bloque, on ne reste pas sur Verification...
+    const r = await fetch(file+"?v="+Date.now(), {signal: ctrl.signal});
+    if(!r.ok) return local;
+    const d = await r.json();
+    if(!Array.isArray(d) || d.length===0) return local;
+    return d.concat(local); // fichier + donnees dans la page
+  }catch(e){ return local; }
 }
 
 async function verifMembre(){
@@ -92,13 +83,13 @@ async function verifMembre(){
   infos.innerHTML="";
   if(!no_id||!hash){res.innerHTML="<span class='bad'>Entrez No ID + Hash</span>";return;}
   res.innerHTML="Verification...";
-  const data=await loadJSON("Membres.json", MEMBRES_SECOURS);
+  const data=await getData("Membres.json", MEMBRES);
   const t=data.find(x=>String(x.no_id).trim()===no_id);
   if(!t){res.innerHTML="<span class='bad'>❌ NON MEMBRE</span>";return;}
   const h1=String(t.hash||"").toLowerCase(); const h2=String(t.hash_complet||"").toLowerCase();
   if(!(hash===h1||hash===h2||h2.startsWith(hash)||hash.startsWith(h1))){res.innerHTML="<span class='bad'>❌ NON MEMBRE - HASH INVALIDE</span>";return;}
   if(t.statut==="actif"||!t.statut){res.innerHTML="<span class='ok'>✅ MEMBRE ACTIF</span>";}
-  else {res.innerHTML="<span class='bad'>❌ NON MEMBRE - INACTIF / REVOQUE</span>";}
+  else{res.innerHTML="<span class='bad'>❌ NON MEMBRE - INACTIF / REVOQUE</span>";}
   infos.innerHTML=`<p><b>Nom :</b> ${t.nom||""}</p><p><b>Fonction :</b> ${t.fonction||""}</p><p><b>No ID :</b> ${t.no_id}</p>`;
 }
 
@@ -109,13 +100,13 @@ async function verifCert(){
   infos.innerHTML="";
   if(!no_id||!hash){res.innerHTML="<span class='bad'>Entrez No ID + Hash</span>";return;}
   res.innerHTML="Verification...";
-  const data=await loadJSON("Certificats.json", CERTS_SECOURS);
+  const data=await getData("Certificats.json", CERTS);
   const t=data.find(x=>String(x.no_id).trim()===no_id);
   if(!t){res.innerHTML="<span class='bad'>❌ CERTIFICAT INTROUVABLE</span>";return;}
   const h1=String(t.hash||"").toLowerCase(); const h2=String(t.hash_complet||"").toLowerCase();
   if(!(hash===h1||hash===h2||h2.startsWith(hash)||hash.startsWith(h1))){res.innerHTML="<span class='bad'>❌ HASH INVALIDE</span>";return;}
   if(t.statut==="revoque"){res.innerHTML="<span class='bad'>❌ CERTIFICAT REVOQUE</span>";}
-  else {res.innerHTML="<span class='ok'>✅ CERTIFICAT AUTHENTIQUE</span>";}
+  else{res.innerHTML="<span class='ok'>✅ CERTIFICAT AUTHENTIQUE</span>";}
   infos.innerHTML=`<p><b>Nom :</b> ${t.nom||""}</p><p><b>Titre :</b> ${t.titre||""}</p><p><b>No ID :</b> ${t.no_id}</p>`;
 }
 </script>
