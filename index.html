@@ -1,13 +1,24 @@
 <!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vérification ELAN</title>
-<style>body{font-family:Arial;padding:20px;max-width:520px;margin:auto;text-align:center}input{width:100%;padding:12px;margin:8px 0;box-sizing:border-box}button{padding:12px;width:100%;background:#0052be;color:white;border:none;border-radius:8px}.ok{background:#e6ffe6;border:2px solid green;padding:18px;border-radius:12px;margin-top:15px;text-align:left}.bad{background:#ffe6e6;border:2px solid red;padding:15px;border-radius:10px;margin-top:15px}</style>
-</head><body>
-<h2>🔍 Vérification ELAN</h2>
-<input id="no_id" placeholder="Ex: ELAN-2026-01">
-<input id="hash" placeholder="Hash du certificat">
+<style>
+body{font-family:Arial;padding:20px;max-width:520px;margin:auto;text-align:center}
+input{width:100%;padding:12px;margin:8px 0;box-sizing:border-box}
+button{padding:12px;width:100%;background:#0052be;color:white;border:none;border-radius:8px;cursor:pointer}
+.ok{background:#e6ffe6;border:2px solid green;padding:18px;border-radius:12px;margin-top:15px;text-align:left}
+.bad{background:#ffe6e6;border:2px solid red;padding:15px;border-radius:10px;margin-top:15px}
+</style>
+</head>
+<body>
+<h2>Vérification ELAN</h2>
+<input id="no_id" placeholder="No ID : ELAN-2026-01">
+<input id="hash" placeholder="Hash">
 <button onclick="verifier()">Vérifier</button>
 <div id="resultat"></div>
+
 <script>
 async function charger(){
   let liste=[];
@@ -17,7 +28,7 @@ async function charger(){
       const d=await r.json();
       if(Array.isArray(d)) liste=liste.concat(d);
       else if(d.certificats) liste=liste.concat(d.certificats);
-      else if(d.no_id) liste.push(d); // si tu as mis un seul objet sans [ ]
+      else if(d.no_id) liste.push(d);
     }
   }catch(e){}
   try{
@@ -30,27 +41,42 @@ async function charger(){
   }catch(e){}
   return liste;
 }
+
 async function verifier(){
   const no_id=document.getElementById("no_id").value.trim().toUpperCase();
   const hash=document.getElementById("hash").value.trim().toLowerCase();
   const div=document.getElementById("resultat");
-  if(!no_id||!hash){div.innerHTML="<div class='bad'>Boss, mets No ID et Hash</div>";return;}
+  if(!no_id||!hash){ div.innerHTML=""; return; }
   div.innerHTML="Vérification...";
   const liste=await charger();
   const c=liste.find(x=>String(x.no_id||"").trim().toUpperCase()===no_id);
-  if(!c){div.innerHTML=`<div class='bad'>❌ CERTIFICAT INTROUVABLE<br><small>${no_id} pas trouvé dans Certificats.json</small></div>`;return;}
+  if(!c){
+    div.innerHTML=`<div class='bad'>CERTIFICAT INTROUVABLE<br><small>${no_id}</small></div>`;
+    return;
+  }
   const vrai=String(c.hash_complet||c.hash||"").trim().toLowerCase();
-  if(vrai!==hash){div.innerHTML=`<div class='bad'>❌ HASH INVALIDE<br><small>Certificat existe mais hash différent</small></div>`;return;}
-  div.innerHTML=`<div class='ok'>✅ CERTIFICAT AUTHENTIQUE - ${c.statut||"Valide"}<br><br>
+  if(vrai!==hash){
+    div.innerHTML=`<div class='bad'>HASH INVALIDE</div>`;
+    return;
+  }
+  div.innerHTML=`<div class='ok'>
+  CERTIFICAT AUTHENTIQUE - ${c.statut||"Valide"}<br><br>
   <b>${c.nom||""}</b><br><br>
   <b>Formation :</b> ${c.formation||c.titre||""}<br>
   <b>No ID :</b> ${c.no_id}<br>
   <b>Du :</b> ${c.date_debut||""} <b>au :</b> ${c.date_fin||""}<br>
-  <b>Généré le :</b> ${c.date_generation||""}<br>
-  <small>Hash: ${vrai.slice(0,16)}...</small></div>`;
+  <b>Généré le :</b> ${c.date_generation||""}
+  </div>`;
 }
+
 window.onload=()=>{
   const p=new URLSearchParams(location.search);
-  if(p.get("no_id")&&p.get("hash")){document.getElementById("no_id").value=p.get("no_id");document.getElementById("hash").value=p.get("hash");verifier();}
+  if(p.get("no_id")&&p.get("hash")){
+    document.getElementById("no_id").value=p.get("no_id");
+    document.getElementById("hash").value=p.get("hash");
+    verifier();
+  }
 };
-</script></body></html>
+</script>
+</body>
+</html>
