@@ -20,17 +20,14 @@ button{width:100%;padding:12px;background:#0052be;color:white;border:none;border
 <div class="box">
 <h2>Verification</h2>
 <p style="text-align:center">Scannez le QR, puis entrez ce qu'il affiche</p>
-
 <label>No ID :</label>
 <input id="no_id" placeholder="Ex : ELAN-001">
 <label>Hash :</label>
 <input id="hash" placeholder="Ex : A1B2C3D4E5F6">
 <button onclick="verif()">Verifier</button>
-
 <p id="res"></p>
 <div id="infos"></div>
 </div>
-
 <script>
 async function verif(){
   const no_id = document.getElementById("no_id").value.trim();
@@ -40,7 +37,6 @@ async function verif(){
   infos.innerHTML = "";
   if(!no_id || !hash){ res.innerHTML = "<span class='bad'>Entrez No ID + Hash</span>"; return; }
   res.innerHTML = "Verification...";
-
   let trouve = null;
   for(const f of ["Membres.json","Certificats.json"]){
     try{
@@ -49,15 +45,18 @@ async function verif(){
       if(m){ trouve = m; break; }
     }catch(e){}
   }
-
   if(!trouve){ res.innerHTML = "<span class='bad'>❌ INTROUVABLE - Faux document</span>"; return; }
   if(trouve.hash !== hash && trouve.hash_complet !== hash && trouve.hash_complet.toUpperCase() !== hash){
     res.innerHTML = "<span class='bad'>❌ HASH INVALIDE - Document falsifie</span>"; return;
   }
-  if(trouve.statut === "revoque"){ res.innerHTML = "<span class='bad'>❌ N'EST PLUS MEMBRE ACTIF - Revoque</span>"; }
-  else { res.innerHTML = "<span class='ok'>✅ DOCUMENT AUTHENTIQUE - Actif</span>"; }
-
-  // CORRIGÉ : on affiche les vrais champs, jamais Personnel
+  const estCertificat = trouve.type === "certificat" || trouve.formation;
+  if(trouve.statut === "revoque" || trouve.statut === "annule"){
+    if(estCertificat) res.innerHTML = "<span class='bad'>❌ CERTIFICAT ANNULE</span>";
+    else res.innerHTML = "<span class='bad'>❌ N'EST PLUS MEMBRE ACTIF - Revoque</span>";
+  } else {
+    if(estCertificat) res.innerHTML = "<span class='ok'>✅ CERTIFICAT AUTHENTIQUE - Valide</span>";
+    else res.innerHTML = "<span class='ok'>✅ DOCUMENT AUTHENTIQUE - Membre Actif</span>";
+  }
   let html = `<p><b>Nom :</b> ${trouve.nom || ""}</p>`;
   if(trouve.organisation) html += `<p><b>Organisation :</b> ${trouve.organisation}</p>`;
   if(trouve.fonction) html += `<p><b>Fonction :</b> ${trouve.fonction}</p>`;
@@ -69,8 +68,6 @@ async function verif(){
   html += `<p><b>Hash :</b> ${trouve.hash}</p>`;
   infos.innerHTML = html;
 }
-
-// Si on ouvre avec ?no_id=...&hash=... ça remplit auto
 const p = new URLSearchParams(location.search);
 if(p.get("no_id")) document.getElementById("no_id").value = p.get("no_id");
 if(p.get("hash")) document.getElementById("hash").value = p.get("hash");
