@@ -50,6 +50,29 @@ button{width:100%;padding:12px;background:#0052be;color:white;border:none;border
 
 </div>
 <script>
+// === REMPLISSAGE AUTOMATIQUE AU SCAN QR ===
+window.onload = function(){
+  const p = new URLSearchParams(window.location.search);
+  // On accepte tous les noms : no_id, id, no, hash, h, type
+  const no_id = p.get("no_id") || p.get("id") || p.get("no") || "";
+  const hash = p.get("hash") || p.get("h") || "";
+  const type = (p.get("type") || p.get("categorie") || "").toLowerCase();
+  if(no_id && hash){
+    // On remplit les DEUX fenetres comme on avait dit
+    document.getElementById("no_id_membre").value = no_id;
+    document.getElementById("hash_membre").value = hash;
+    document.getElementById("no_id_cert").value = no_id;
+    document.getElementById("hash_cert").value = hash;
+    // Et on lance la verification automatique
+    if(type.includes("cert")){ verifCert(); }
+    else if(type.includes("mem")){ verifMembre(); }
+    else {
+      // Sans type, on verifie les deux
+      verifMembre();
+      verifCert();
+    }
+  }
+};
 async function verifMembre(){
   const no_id = document.getElementById("no_id_membre").value.trim();
   const hash = document.getElementById("hash_membre").value.trim().toLowerCase();
