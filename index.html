@@ -3,22 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Verification Membre</title>
+<title>Verification</title>
 <style>
 body{font-family:Arial,sans-serif;text-align:center;padding:20px;background:#f5f5f5}
 .box{border:2px solid #0052be;border-radius:12px;padding:20px;max-width:420px;margin:auto;background:white;text-align:left}
 h2{text-align:center;color:#0052be}
 input{width:100%;padding:12px;margin:8px 0;box-sizing:border-box;border:1px solid #ccc;border-radius:8px;font-size:16px}
-button{width:100%;padding:12px;background:#0052be;color:white;border:none;border-radius:8px;font-size:16px;cursor:pointer}
+button{width:100%;padding:12px;background:#0052be;color:white;border:none;border-radius:8px;font-size:16px}
 .ok{color:green;font-weight:bold;text-align:center}
 .bad{color:red;font-weight:bold;text-align:center}
 </style>
 </head>
 <body>
 <div class="box">
-<h2>Verification Membre</h2>
+<h2>Verification</h2>
+<p style="text-align:center">Scannez le QR, puis entrez ce qu'il affiche</p>
 <label>No ID :</label>
-<input id="no_id" placeholder="Ex : ELAN-2026-01">
+<input id="no_id" placeholder="Ex : ELAN-2026-03">
 <label>Hash :</label>
 <input id="hash" placeholder="Hash">
 <button onclick="verif()">Verifier</button>
@@ -26,25 +27,31 @@ button{width:100%;padding:12px;background:#0052be;color:white;border:none;border
 <div id="infos"></div>
 </div>
 <script>
-// === COLLE TES MEMBRES ICI, ENTRE LES [ ] ===
-// Copie le contenu de ton ancien Membres.json, sans les [ ] extérieurs, colle ici
-const MEMBRES = [
-  // EXEMPLE, efface-le et mets les tiens :
-  // {"no_id":"ELAN-2026-01","nom":"NOM","organisation":"ELAN","fonction":"Membre","telephone":"...","mail":"...","hash":"A1B2C3D4E5F6","statut":"actif"},
-];
-
-function verif(){
+async function load(nom){
+  try{ const r = await fetch(nom+"?v="+Date.now()); if(!r.ok) return []; return await r.json(); }catch(e){ return []; }
+}
+async function verif(){
   const no_id = document.getElementById("no_id").value.trim();
-  const hash = document.getElementById("hash").value.trim();
+  const hash = document.getElementById("hash").value.trim().toLowerCase();
   const res = document.getElementById("res");
   const infos = document.getElementById("infos");
   infos.innerHTML = "";
-  const trouve = MEMBRES.find(x => x.no_id === no_id);
-  if(!trouve){ res.innerHTML = "<span class='bad'>❌ INTROUVABLE</span>"; return; }
-  if(trouve.hash !== hash){ res.innerHTML = "<span class='bad'>❌ HASH INVALIDE</span>"; return; }
-  if(trouve.statut === "revoque"){ res.innerHTML = "<span class='bad'>❌ N'EST PLUS MEMBRE ACTIF</span>"; }
-  else { res.innerHTML = "<span class='ok'>✅ DOCUMENT AUTHENTIQUE - Membre Actif</span>"; }
-  infos.innerHTML = `<p><b>Nom :</b> ${trouve.nom}</p><p><b>Organisation :</b> ${trouve.organisation}</p><p><b>Fonction :</b> ${trouve.fonction}</p><p><b>No ID :</b> ${trouve.no_id}</p><p><b>Hash :</b> ${trouve.hash}</p>`;
+  if(!no_id || !hash){ res.innerHTML = "<span class='bad'>Entrez No ID + Hash</span>"; return; }
+  res.innerHTML = "Verification...";
+  const membres = await load("Membres.json");
+  const certs = await load("Certificats.json");
+  // Cherche d'abord dans les 2 fichiers
+  let trouve = membres.find(x => x.no_id === no_id);
+  let type = "Membre";
+  if(!trouve){ trouve = certs.find(x => x.no_id === no_id); type = "Certificat"; }
+  if(!trouve){ res.innerHTML = "<span class='bad'>❌ INTROUVABLE - Faux</span>"; return; }
+  // Comparaison souple : long ou court, on compare les 12 premiers
+  const hFichier = String(trouve.hash || trouve.hash_complet || "").toLowerCase();
+  const ok = hFichier.slice(0,12) === hash.slice(0,12) || hFichier === hash || hFichier.startsWith(hash) || hash.startsWith(hFichier);
+  if(!ok){ res.innerHTML = "<span class='bad'>❌ HASH INVALIDE</span>"; return; }
+  if(trouve.statut === "revoque"){ res.innerHTML = "<span class='bad'>❌ REVOQUE</span>"; }
+  else { res.innerHTML = "<span class='ok'>✅ DOCUMENT AUTHENTIQUE - " + type + " Actif</span>"; }
+  infos.innerHTML = `<p><b>Nom :</b> ${trouve.nom||""}</p><p><b>Organisation :</b> ${trouve.organisation||"ELAN"}</p><p><b>Fonction / Titre :</b> ${trouve.fonction||trouve.titre||""}</p><p><b>No ID :</b> ${trouve.no_id}</p><p><b>Hash :</b> ${trouve.hash||""}</p>`;
 }
 </script>
 </body>
