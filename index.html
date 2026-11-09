@@ -19,16 +19,33 @@ button{padding:12px;width:100%;background:#0052be;color:white;border:none;border
 <button onclick="verifier()">Vérifier</button>
 <div id="resultat"></div>
 <script>
+function normaliser(data){
+  if(!data) return [];
+  if(Array.isArray(data)) return data;
+  if(data.certificats && Array.isArray(data.certificats)) return data.certificats;
+  if(data.preuves && Array.isArray(data.preuves)) return data.preuves;
+  if(data.no_id || data.id || data.hash) return [data];
+  if(typeof data === "object"){
+    const vals = Object.values(data);
+    if(vals.length && typeof vals[0] === "object") return vals;
+  }
+  return [];
+}
 async function charger(){
   let liste=[];
+  const fichiers = ["Certificats.json", "certificats.json", "preuves.json", "Preuves.json"];
+  for(const f of fichiers){
+    try{
+      const r=await fetch(f+"?v="+Date.now());
+      if(r.ok){
+        const d=await r.json();
+        liste=liste.concat(normaliser(d));
+      }
+    }catch(e){}
+  }
   try{
-    const r=await fetch("Certificats.json?v="+Date.now());
-    if(r.ok){
-      const d=await r.json();
-      if(Array.isArray(d)) liste=liste.concat(d);
-      else if(d.certificats) liste=liste.concat(d.certificats);
-      else if(d.no_id) liste.push(d);
-    }
+    const local=JSON.parse(localStorage.getItem("elan_preuves")||"[]");
+    if(Array.isArray(local)) liste=liste.concat(local);
   }catch(e){}
   return liste;
 }
@@ -39,7 +56,7 @@ async function verifier(){
   if(!no_id||!hash){ div.innerHTML=""; return; }
   div.innerHTML="Vérification...";
   const liste=await charger();
-  const c=liste.find(x=>String(x.no_id||"").trim().toUpperCase()===no_id);
+  const c=liste.find(x=>String(x.no_id||x.id||"").trim().toUpperCase()===no_id);
   if(!c){ div.innerHTML=`<div class='bad'>CERTIFICAT INTROUVABLE<br><small>${no_id}</small></div>`; return; }
   const vrai=String(c.hash_complet||c.hash||"").trim().toLowerCase();
   if(vrai!==hash){ div.innerHTML=`<div class='bad'>HASH INVALIDE</div>`; return; }
