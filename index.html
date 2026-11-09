@@ -18,7 +18,6 @@ button{padding:12px;width:100%;background:#0052be;color:white;border:none;border
 <input id="hash" placeholder="Hash">
 <button onclick="verifier()">Vérifier</button>
 <div id="resultat"></div>
-
 <script>
 async function charger(){
   let liste=[];
@@ -31,17 +30,8 @@ async function charger(){
       else if(d.no_id) liste.push(d);
     }
   }catch(e){}
-  try{
-    const r2=await fetch("preuves.json?v="+Date.now());
-    if(r2.ok){
-      const d2=await r2.json();
-      if(Array.isArray(d2)) liste=liste.concat(d2.filter(x=>x.type==="certificat"));
-      else if(d2.certificats) liste=liste.concat(d2.certificats);
-    }
-  }catch(e){}
   return liste;
 }
-
 async function verifier(){
   const no_id=document.getElementById("no_id").value.trim().toUpperCase();
   const hash=document.getElementById("hash").value.trim().toLowerCase();
@@ -50,32 +40,14 @@ async function verifier(){
   div.innerHTML="Vérification...";
   const liste=await charger();
   const c=liste.find(x=>String(x.no_id||"").trim().toUpperCase()===no_id);
-  if(!c){
-    div.innerHTML=`<div class='bad'>CERTIFICAT INTROUVABLE<br><small>${no_id}</small></div>`;
-    return;
-  }
+  if(!c){ div.innerHTML=`<div class='bad'>CERTIFICAT INTROUVABLE<br><small>${no_id}</small></div>`; return; }
   const vrai=String(c.hash_complet||c.hash||"").trim().toLowerCase();
-  if(vrai!==hash){
-    div.innerHTML=`<div class='bad'>HASH INVALIDE</div>`;
-    return;
-  }
-  div.innerHTML=`<div class='ok'>
-  CERTIFICAT AUTHENTIQUE - ${c.statut||"Valide"}<br><br>
-  <b>${c.nom||""}</b><br><br>
-  <b>Formation :</b> ${c.formation||c.titre||""}<br>
-  <b>No ID :</b> ${c.no_id}<br>
-  <b>Du :</b> ${c.date_debut||""} <b>au :</b> ${c.date_fin||""}<br>
-  <b>Généré le :</b> ${c.date_generation||""}
-  </div>`;
+  if(vrai!==hash){ div.innerHTML=`<div class='bad'>HASH INVALIDE</div>`; return; }
+  div.innerHTML=`<div class='ok'>CERTIFICAT AUTHENTIQUE - ${c.statut||"Valide"}<br><br><b>${c.nom||""}</b><br><br><b>Formation :</b> ${c.formation||c.titre||""}<br><b>No ID :</b> ${c.no_id}<br><b>Du :</b> ${c.date_debut||""} <b>au :</b> ${c.date_fin||""}<br><b>Généré le :</b> ${c.date_generation||""}</div>`;
 }
-
 window.onload=()=>{
   const p=new URLSearchParams(location.search);
-  if(p.get("no_id")&&p.get("hash")){
-    document.getElementById("no_id").value=p.get("no_id");
-    document.getElementById("hash").value=p.get("hash");
-    verifier();
-  }
+  if(p.get("no_id")&&p.get("hash")){document.getElementById("no_id").value=p.get("no_id");document.getElementById("hash").value=p.get("hash");verifier();}
 };
 </script>
 </body>
