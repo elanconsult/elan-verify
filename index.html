@@ -3,50 +3,92 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Verification Certificat</title>
+<title>Verification ELAN</title>
 <style>
 body{font-family:Arial,sans-serif;text-align:center;padding:20px;background:#f5f5f5}
-.box{border:2px solid #0052be;border-radius:12px;padding:20px;max-width:420px;margin:auto;background:white;text-align:left}
+.container{display:flex;flex-wrap:wrap;gap:20px;justify-content:center}
+.box{border:2px solid #0052be;border-radius:12px;padding:20px;width:380px;background:white;text-align:left}
+.box.cert{border-color:#009933}
 h2{text-align:center;color:#0052be}
+.box.cert h2{color:#009933}
 input{width:100%;padding:12px;margin:8px 0;box-sizing:border-box;border:1px solid #ccc;border-radius:8px;font-size:16px}
-button{width:100%;padding:12px;background:#0052be;color:white;border:none;border-radius:8px;font-size:16px}
+button{width:100%;padding:12px;background:#0052be;color:white;border:none;border-radius:8px;font-size:16px;cursor:pointer}
+.box.cert button{background:#009933}
 .ok{color:green;font-weight:bold;text-align:center}
 .bad{color:red;font-weight:bold;text-align:center}
 </style>
 </head>
 <body>
+<h1>Verification ELAN</h1>
+<div class="container">
+
+<!-- FENETRE 1 : MEMBRE -->
 <div class="box">
+<h2>Verification Membre</h2>
+<p style="text-align:center">Verifiez une carte de membre</p>
+<label>No ID Membre :</label>
+<input id="no_id_membre" placeholder="Ex : ELAN-M-001">
+<label>Hash Membre :</label>
+<input id="hash_membre" placeholder="Hash membre">
+<button onclick="verifMembre()">Verifier Membre</button>
+<p id="res_membre"></p>
+<div id="infos_membre"></div>
+</div>
+
+<!-- FENETRE 2 : CERTIFICAT -->
+<div class="box cert">
 <h2>Verification Certificat</h2>
-<p style="text-align:center">Scannez le QR, puis entrez ce qu'il affiche</p>
-<label>No ID :</label>
-<input id="no_id" placeholder="Ex : ELAN-2026-03">
-<label>Hash :</label>
-<input id="hash" placeholder="Hash du certificat">
-<button onclick="verif()">Verifier</button>
-<p id="res"></p>
-<div id="infos"></div>
+<p style="text-align:center">Verifiez un certificat</p>
+<label>No ID Certificat :</label>
+<input id="no_id_cert" placeholder="Ex : ELAN-2026-03">
+<label>Hash Certificat :</label>
+<input id="hash_cert" placeholder="Hash certificat">
+<button onclick="verifCert()">Verifier Certificat</button>
+<p id="res_cert"></p>
+<div id="infos_cert"></div>
+</div>
+
 </div>
 <script>
-async function verif(){
-  const no_id = document.getElementById("no_id").value.trim();
-  const hash = document.getElementById("hash").value.trim().toLowerCase();
-  const res = document.getElementById("res");
-  const infos = document.getElementById("infos");
+async function verifMembre(){
+  const no_id = document.getElementById("no_id_membre").value.trim();
+  const hash = document.getElementById("hash_membre").value.trim().toLowerCase();
+  const res = document.getElementById("res_membre");
+  const infos = document.getElementById("infos_membre");
+  infos.innerHTML = "";
+  if(!no_id || !hash){ res.innerHTML = "<span class='bad'>Entrez No ID + Hash</span>"; return; }
+  res.innerHTML = "Verification...";
+  const r = await fetch("Membres.json?v="+Date.now());
+  const data = await r.json();
+  const trouve = data.find(x => x.no_id === no_id);
+  if(!trouve){ res.innerHTML = "<span class='bad'>❌ MEMBRE INTROUVABLE</span>"; return; }
+  const h1 = String(trouve.hash || "").toLowerCase();
+  const h2 = String(trouve.hash_complet || "").toLowerCase();
+  const ok = hash === h1 || hash === h2 || h2.startsWith(hash) || hash.startsWith(h1);
+  if(!ok){ res.innerHTML = "<span class='bad'>❌ HASH INVALIDE</span>"; return; }
+  if(trouve.statut === "revoque"){ res.innerHTML = "<span class='bad'>❌ MEMBRE REVOQUE</span>"; }
+  else { res.innerHTML = "<span class='ok'>✅ MEMBRE AUTHENTIQUE</span>"; }
+  infos.innerHTML = `<p><b>Nom :</b> ${trouve.nom||""}</p><p><b>Fonction :</b> ${trouve.fonction||""}</p><p><b>No ID :</b> ${trouve.no_id}</p><p><b>Hash :</b> ${h1}</p>`;
+}
+async function verifCert(){
+  const no_id = document.getElementById("no_id_cert").value.trim();
+  const hash = document.getElementById("hash_cert").value.trim().toLowerCase();
+  const res = document.getElementById("res_cert");
+  const infos = document.getElementById("infos_cert");
   infos.innerHTML = "";
   if(!no_id || !hash){ res.innerHTML = "<span class='bad'>Entrez No ID + Hash</span>"; return; }
   res.innerHTML = "Verification...";
   const r = await fetch("Certificats.json?v="+Date.now());
   const data = await r.json();
   const trouve = data.find(x => x.no_id === no_id);
-  if(!trouve){ res.innerHTML = "<span class='bad'>❌ INTROUVABLE - Faux</span>"; return; }
+  if(!trouve){ res.innerHTML = "<span class='bad'>❌ CERTIFICAT INTROUVABLE</span>"; return; }
   const h1 = String(trouve.hash || "").toLowerCase();
   const h2 = String(trouve.hash_complet || "").toLowerCase();
-  // Ancien systeme : on accepte hash court ou hash complet
   const ok = hash === h1 || hash === h2 || h2.startsWith(hash) || hash.startsWith(h1);
   if(!ok){ res.innerHTML = "<span class='bad'>❌ HASH INVALIDE</span>"; return; }
   if(trouve.statut === "revoque"){ res.innerHTML = "<span class='bad'>❌ CERTIFICAT REVOQUE</span>"; }
   else { res.innerHTML = "<span class='ok'>✅ CERTIFICAT AUTHENTIQUE</span>"; }
-  infos.innerHTML = `<p><b>Nom :</b> ${trouve.nom||""}</p><p><b>Titre :</b> ${trouve.titre||""}</p><p><b>Organisation :</b> ${trouve.organisation||"ELAN"}</p><p><b>No ID :</b> ${trouve.no_id}</p><p><b>Hash :</b> ${h1}</p>`;
+  infos.innerHTML = `<p><b>Nom :</b> ${trouve.nom||""}</p><p><b>Titre :</b> ${trouve.titre||""}</p><p><b>No ID :</b> ${trouve.no_id}</p><p><b>Hash :</b> ${h1}</p>`;
 }
 </script>
 </body>
