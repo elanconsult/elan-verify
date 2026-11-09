@@ -1,6 +1,6 @@
 <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Verification</title>
-<style>body{font-family:Arial;text-align:center;padding:30px}.ok{color:green}.bad{color:red}.box{border:2px solid #0052be;border-radius:12px;padding:20px;max-width:400px;margin:auto}</style></head>
-<body><div class="box"><h2>Verification</h2><p id="res">Verification...</p><div id="infos"></div></div>
+<style>body{font-family:Arial;text-align:center;padding:30px}.ok{color:green}.bad{color:red}.box{border:2px solid #0052be;border-radius:12px;padding:20px;max-width:400px;margin:auto;text-align:left}</style></head>
+<body><div class="box"><h2 style="text-align:center">Verification</h2><p id="res" style="text-align:center">Verification...</p><div id="infos"></div></div>
 <script>
 const p = new URLSearchParams(location.search);
 const no_id = p.get("no_id"), hash = p.get("hash");
@@ -15,7 +15,18 @@ async function verif(){
   if(trouve.hash_complet!==hash && trouve.hash!==hash){ res.innerHTML="<span class='bad'>❌ HASH INVALIDE - Document falsifie</span>"; return; }
   if(trouve.statut==="revoque"){ res.innerHTML="<span class='bad'>❌ N'EST PLUS MEMBRE ACTIF - Revoque</span>"; }
   else { res.innerHTML="<span class='ok'>✅ DOCUMENT AUTHENTIQUE - Actif</span>"; }
-  infos.innerHTML=`<p><b>${trouve.nom}</b></p><p>${trouve.organisation||trouve.formation||""}</p><p>No ID : ${trouve.no_id}</p><p>Hash : ${trouve.hash}</p>`;
+
+  // CORRIGÉ : on affiche les vrais champs, pas Personnel
+  let html = `<p><b>Nom :</b> ${trouve.nom||""}</p>`;
+  if(trouve.organisation) html += `<p><b>Organisation :</b> ${trouve.organisation}</p>`;
+  if(trouve.fonction) html += `<p><b>Fonction :</b> ${trouve.fonction}</p>`;
+  if(trouve.telephone) html += `<p><b>Tel :</b> ${trouve.telephone}</p>`;
+  if(trouve.mail) html += `<p><b>Mail :</b> ${trouve.mail}</p>`;
+  if(trouve.formation) html += `<p><b>Formation :</b> ${trouve.formation}</p>`;
+  if(trouve.date) html += `<p><b>Date :</b> ${trouve.date}</p>`;
+  html += `<p><b>No ID :</b> ${trouve.no_id}</p>`;
+  html += `<p><b>Hash :</b> ${trouve.hash}</p>`;
+  infos.innerHTML = html;
 }
 verif();
 </script></body></html>
