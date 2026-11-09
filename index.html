@@ -21,97 +21,73 @@ button{width:100%;padding:12px;background:#0052be;color:white;border:none;border
 <body>
 <h1>Verification ELAN</h1>
 <div class="container">
-
-<!-- FENETRE 1 : MEMBRE -->
 <div class="box">
 <h2>Verification Membre</h2>
-<p style="text-align:center">Verifiez une carte de membre</p>
-<label>No ID Membre :</label>
-<input id="no_id_membre" placeholder="Ex : ELAN-M-001">
-<label>Hash Membre :</label>
-<input id="hash_membre" placeholder="Hash membre">
+<input id="no_id_membre" placeholder="No ID" oninput="syncMembre()">
+<input id="hash_membre" placeholder="Hash" oninput="syncMembre()">
 <button onclick="verifMembre()">Verifier Membre</button>
-<p id="res_membre"></p>
-<div id="infos_membre"></div>
+<p id="res_membre"></p><div id="infos_membre"></div>
 </div>
-
-<!-- FENETRE 2 : CERTIFICAT -->
 <div class="box cert">
 <h2>Verification Certificat</h2>
-<p style="text-align:center">Verifiez un certificat</p>
-<label>No ID Certificat :</label>
-<input id="no_id_cert" placeholder="Ex : ELAN-2026-03">
-<label>Hash Certificat :</label>
-<input id="hash_cert" placeholder="Hash certificat">
+<input id="no_id_cert" placeholder="No ID" oninput="syncCert()">
+<input id="hash_cert" placeholder="Hash" oninput="syncCert()">
 <button onclick="verifCert()">Verifier Certificat</button>
-<p id="res_cert"></p>
-<div id="infos_cert"></div>
+<p id="res_cert"></p><div id="infos_cert"></div>
 </div>
-
 </div>
 <script>
-// === REMPLISSAGE AUTOMATIQUE AU SCAN QR ===
+// === SI TU REMPLIS UNE FENETRE, L'AUTRE SE REMPLIT TOUTE SEULE ===
+function syncMembre(){
+  document.getElementById("no_id_cert").value = document.getElementById("no_id_membre").value;
+  document.getElementById("hash_cert").value = document.getElementById("hash_membre").value;
+}
+function syncCert(){
+  document.getElementById("no_id_membre").value = document.getElementById("no_id_cert").value;
+  document.getElementById("hash_membre").value = document.getElementById("hash_cert").value;
+}
+// === SI TU SCANNES LE QR, CA REMPLIT LES DEUX TOUT SEUL ===
 window.onload = function(){
   const p = new URLSearchParams(window.location.search);
-  // On accepte tous les noms : no_id, id, no, hash, h, type
-  const no_id = p.get("no_id") || p.get("id") || p.get("no") || "";
+  const no_id = p.get("no_id") || p.get("id") || "";
   const hash = p.get("hash") || p.get("h") || "";
-  const type = (p.get("type") || p.get("categorie") || "").toLowerCase();
   if(no_id && hash){
-    // On remplit les DEUX fenetres comme on avait dit
     document.getElementById("no_id_membre").value = no_id;
     document.getElementById("hash_membre").value = hash;
     document.getElementById("no_id_cert").value = no_id;
     document.getElementById("hash_cert").value = hash;
-    // Et on lance la verification automatique
-    if(type.includes("cert")){ verifCert(); }
-    else if(type.includes("mem")){ verifMembre(); }
-    else {
-      // Sans type, on verifie les deux
-      verifMembre();
-      verifCert();
-    }
+    verifMembre(); verifCert();
   }
 };
 async function verifMembre(){
   const no_id = document.getElementById("no_id_membre").value.trim();
   const hash = document.getElementById("hash_membre").value.trim().toLowerCase();
-  const res = document.getElementById("res_membre");
-  const infos = document.getElementById("infos_membre");
-  infos.innerHTML = "";
-  if(!no_id || !hash){ res.innerHTML = "<span class='bad'>Entrez No ID + Hash</span>"; return; }
-  res.innerHTML = "Verification...";
-  const r = await fetch("Membres.json?v="+Date.now());
-  const data = await r.json();
-  const trouve = data.find(x => x.no_id === no_id);
-  if(!trouve){ res.innerHTML = "<span class='bad'>❌ MEMBRE INTROUVABLE</span>"; return; }
-  const h1 = String(trouve.hash || "").toLowerCase();
-  const h2 = String(trouve.hash_complet || "").toLowerCase();
-  const ok = hash === h1 || hash === h2 || h2.startsWith(hash) || hash.startsWith(h1);
-  if(!ok){ res.innerHTML = "<span class='bad'>❌ HASH INVALIDE</span>"; return; }
-  if(trouve.statut === "revoque"){ res.innerHTML = "<span class='bad'>❌ MEMBRE REVOQUE</span>"; }
-  else { res.innerHTML = "<span class='ok'>✅ MEMBRE AUTHENTIQUE</span>"; }
-  infos.innerHTML = `<p><b>Nom :</b> ${trouve.nom||""}</p><p><b>Fonction :</b> ${trouve.fonction||""}</p><p><b>No ID :</b> ${trouve.no_id}</p><p><b>Hash :</b> ${h1}</p>`;
+  const res = document.getElementById("res_membre"); const infos = document.getElementById("infos_membre");
+  infos.innerHTML="";
+  if(!no_id || !hash){ res.innerHTML="<span class='bad'>Entrez No ID + Hash</span>"; return; }
+  res.innerHTML="Verification...";
+  const r = await fetch("Membres.json?v="+Date.now()); const data = await r.json();
+  const t = data.find(x=>x.no_id===no_id);
+  if(!t){ res.innerHTML="<span class='bad'>❌ MEMBRE INTROUVABLE</span>"; return; }
+  const h1=String(t.hash||"").toLowerCase(); const h2=String(t.hash_complet||"").toLowerCase();
+  if(!(hash===h1||hash===h2||h2.startsWith(hash)||hash.startsWith(h1))){ res.innerHTML="<span class='bad'>❌ HASH INVALIDE</span>"; return; }
+  res.innerHTML = t.statut==="revoque" ? "<span class='bad'>❌ MEMBRE REVOQUE</span>" : "<span class='ok'>✅ MEMBRE AUTHENTIQUE</span>";
+  infos.innerHTML=`<p><b>Nom :</b> ${t.nom||""}</p><p><b>No ID :</b> ${t.no_id}</p>`;
 }
 async function verifCert(){
   const no_id = document.getElementById("no_id_cert").value.trim();
   const hash = document.getElementById("hash_cert").value.trim().toLowerCase();
-  const res = document.getElementById("res_cert");
-  const infos = document.getElementById("infos_cert");
-  infos.innerHTML = "";
-  if(!no_id || !hash){ res.innerHTML = "<span class='bad'>Entrez No ID + Hash</span>"; return; }
-  res.innerHTML = "Verification...";
-  const r = await fetch("Certificats.json?v="+Date.now());
-  const data = await r.json();
-  const trouve = data.find(x => x.no_id === no_id);
-  if(!trouve){ res.innerHTML = "<span class='bad'>❌ CERTIFICAT INTROUVABLE</span>"; return; }
-  const h1 = String(trouve.hash || "").toLowerCase();
-  const h2 = String(trouve.hash_complet || "").toLowerCase();
-  const ok = hash === h1 || hash === h2 || h2.startsWith(hash) || hash.startsWith(h1);
-  if(!ok){ res.innerHTML = "<span class='bad'>❌ HASH INVALIDE</span>"; return; }
-  if(trouve.statut === "revoque"){ res.innerHTML = "<span class='bad'>❌ CERTIFICAT REVOQUE</span>"; }
-  else { res.innerHTML = "<span class='ok'>✅ CERTIFICAT AUTHENTIQUE</span>"; }
-  infos.innerHTML = `<p><b>Nom :</b> ${trouve.nom||""}</p><p><b>Titre :</b> ${trouve.titre||""}</p><p><b>No ID :</b> ${trouve.no_id}</p><p><b>Hash :</b> ${h1}</p>`;
+  const res = document.getElementById("res_cert"); const infos = document.getElementById("infos_cert");
+  infos.innerHTML="";
+  if(!no_id || !hash){ res.innerHTML="<span class='bad'>Entrez No ID + Hash</span>"; return; }
+  res.innerHTML="Verification...";
+  const r = await fetch("Certificats.json?v="+Date.now()); const data = await r.json();
+  const t = data.find(x=>x.no_id===no_id);
+  if(!t){ res.innerHTML="<span class='bad'>❌ CERTIFICAT INTROUVABLE</span>"; return; }
+  const h1=String(t.hash||"").toLowerCase(); const h2=String(t.hash_complet||"").toLowerCase();
+  if(!(hash===h1||hash===h2||h2.startsWith(hash)||hash.startsWith(h1))){ res.innerHTML="<span class='bad'>❌ HASH INVALIDE</span>"; return; }
+  res.innerHTML = t.statut==="revoque" ? "<span class='bad'>❌ CERTIFICAT REVOQUE</span>" : "<span class='ok'>✅ CERTIFICAT AUTHENTIQUE</span>";
+  infos.innerHTML=`<p><b>Nom :</b> ${t.nom||""}</p><p><b>Titre :</b> ${t.titre||""}</p><p><b>No ID :</b> ${t.no_id}</p>`;
 }
 </script>
 </body>
