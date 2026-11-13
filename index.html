@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Vérification ELAN</title>
+  <title>Vérification ELAN CONSULT</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -30,7 +30,8 @@
       cursor: pointer;
     }
 
-    .ok, .bad {
+    .ok,
+    .bad {
       padding: 16px;
       border-radius: 10px;
       margin-top: 15px;
@@ -46,10 +47,70 @@
       background: #ffe6e6;
       border: 2px solid red;
     }
+
+    .cabinet {
+      margin: 0 0 18px;
+      padding: 22px 14px 18px;
+      color: white;
+      background: #0052be;
+      border-bottom: 5px solid #ffc107;
+      border-radius: 10px;
+    }
+
+    .cabinet h1 {
+      margin: 0;
+      font-size: 25px;
+      line-height: 1.15;
+    }
+
+    .cabinet .orange {
+      color: #ff6b35;
+    }
+
+    .cabinet .slogan {
+      margin: 12px 0 0;
+      font-size: 17px;
+      font-weight: bold;
+    }
+
+    .cabinet .sous-slogan {
+      display: inline-block;
+      margin-top: 11px;
+      padding: 8px 12px;
+      color: #ffd966;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      font-size: 14px;
+      font-weight: bold;
+      line-height: 1.4;
+    }
+
+    .pub {
+      margin: 0 0 18px;
+      padding: 12px;
+      color: #6b5a00;
+      background: #fff3cd;
+      border: 2px dashed #ffc107;
+      border-radius: 10px;
+      font-weight: bold;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
-  <h2>Vérification ELAN</h2>
+  <h2>Vérification ELAN CONSULT</h2>
+
+  <section class="cabinet" aria-label="Présentation du Cabinet ELAN CONSULT">
+    <h1>CABINET<br>ELAN <span class="orange">CONSULT</span></h1>
+    <p class="slogan">Finis l'usage des faux documents.</p>
+    <p class="sous-slogan">
+      ⚡ Vérifiez l'authenticité et l'intégrité des documents en 2 secondes.
+    </p>
+  </section>
+
+  <div class="pub">
+    ✅ 100% Vérifié &nbsp; | &nbsp; 🔒 Sécurisé &nbsp; | &nbsp; ⚡ Rapide en 2 sec
+  </div>
 
   <input id="no_id" placeholder="No ID" autocomplete="off">
   <input id="hash" placeholder="Hash" autocomplete="off">
@@ -101,7 +162,11 @@
     }
 
     function ajouterChamp(parent, libelle, valeur) {
-      if (valeur === undefined || valeur === null || String(valeur).trim() === "") {
+      if (
+        valeur === undefined ||
+        valeur === null ||
+        String(valeur).trim() === ""
+      ) {
         return;
       }
 
@@ -164,7 +229,11 @@
           carte.appendChild(titre);
 
           const details = document.createElement("p");
-          ajouterChamp(details, "Statut", estActif ? "Membre actif" : "Non membre");
+          ajouterChamp(
+            details,
+            "Statut",
+            estActif ? "Membre actif" : "Non membre"
+          );
           ajouterChamp(details, "Nom", membre.nom);
           ajouterChamp(details, "Téléphone", membre.telephone);
           ajouterChamp(details, "Organisation", membre.organisation);
@@ -206,7 +275,11 @@
 
         const details = document.createElement("p");
         ajouterChamp(details, "Nom", certificat.nom);
-        ajouterChamp(details, "Formation", certificat.formation || certificat.titre);
+        ajouterChamp(
+          details,
+          "Formation",
+          certificat.formation || certificat.titre
+        );
         ajouterChamp(details, "Date", certificat.date);
         ajouterChamp(details, "No ID", certificat.no_id || certificat.id);
         ajouterChamp(details, "Statut", certificat.statut);
@@ -215,7 +288,8 @@
         resultat.appendChild(carte);
       } catch (erreur) {
         afficherErreur(
-          "Impossible de charger Membres.json ou preuves.json. Vérifiez qu’ils sont publiés au même emplacement que cette page."
+          "Impossible de charger Membres.json ou preuves.json. " +
+          "Vérifiez qu’ils sont publiés au même emplacement que cette page."
         );
         console.error(erreur);
       }
@@ -233,44 +307,5 @@
       }
     });
   </script>
-  <!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ELAN CONSULT</title>
-<style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
-    body { background: #F4F6FA; min-height: 100vh; }
-
-    .header { background: #0052BE; color: white; text-align: center; padding: 32px 12px 26px 12px; border-bottom: 6px solid #FFC107; width: 100%; }
-    .header h1 { font-size: 32px; font-weight: 900; letter-spacing: 1px; line-height: 1.15; }
-    .header h1 .orange { color: #FF6B35; }
-    .slogan { font-size: 24px; font-weight: 800; color: white; text-align: center; line-height: 1.3; margin: 16px auto 0 auto; max-width: 380px; }
-    .sous-slogan { font-size: 17px; color: #FFD966; text-align: center; margin-top: 14px; font-weight: 700; background: rgba(255,255,255,0.12); display: inline-block; padding: 10px 20px; border-radius: 25px; line-height: 1.35; }
-
-    .pub { background: #FFF3CD; border: 2px dashed #FFC107; color: #6B5A00; text-align: center; font-size: 16px; font-weight: 700; padding: 14px 10px; margin: 18px 20px 0 20px; border-radius: 12px; line-height: 1.5; }
-</style>
-</head>
-<body>
-
-  <div class="header">
-    <h1>CABINET<br>ELAN <span class="orange">CONSULT</span></h1>
-    <p class="slogan">Finis l'usage des faux documents.</p>
-    <p class="sous-slogan">⚡ Vérifiez l'authenticité  et l'intégrité des  documents en 2<br>secondes.</p>
-  </div>
-
-  <div class="pub">
-    ✅ 100% Vérifié &nbsp; | &nbsp; 🔒 Sécurisé &nbsp; | &nbsp; ⚡<br>
-    Rapide en 2 sec
-  </div>
-
-  <!-- TA VÉRIFICATION DIRECTE ICI, EN BAS, SANS BOUTON -->
-  <script>
-    // ton code de vérification directe
-  </script>
-
-</body>
-</html>
 </body>
 </html>
